@@ -20,11 +20,20 @@ It uses the following files to be configured :
 '''
 
 import sys
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+import datetime
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 BACKUP_EVERY_N_MINUTES = 20
 ROTATION_EVERY_N_ITERATIONS = 10
+
+
+def restic_backup():
+    print('-'*50)
+    print(datetime.datetime.now())
+    print('restic backup!')
+    print()
 
 
 if __name__ == '__main__':
@@ -34,7 +43,6 @@ if __name__ == '__main__':
         QIcon('icons/backup_in_pause.png'),
         parent=app
     )
-    # trayIcon.setToolTip('Check out my tray icon')
     trayIcon.show()
 
     menu = QMenu()
@@ -42,5 +50,9 @@ if __name__ == '__main__':
     exitAction.triggered.connect(app.quit)
 
     trayIcon.setContextMenu(menu)
+
+    timer = QTimer()
+    timer.timeout.connect(restic_backup)
+    timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
 
     sys.exit(app.exec_())
