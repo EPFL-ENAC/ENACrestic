@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+
+'''
+Does :
+
++ Run every 20 minutes : `restic backup`
++ Run every 10 iteration : `restic forget` (for the backup rotation)
+
+It uses the following files to be configured :
+
++ ~/.enacrestic/bkp_include
+  This is given to --files-from option
++ ~/.enacrestic/.pw
+  This is given to --password-file option
++ ~/.enacrestic/env.sh
+  This file has to configure env variables such as :
+  + RESTIC_REPOSITORY
+  + AWS_ACCESS_KEY_ID (if using S3)
+  + AWS_SECRET_ACCESS_KEY (if using S3)
+'''
+
+import sys
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+from PyQt5.QtGui import QIcon
+
+BACKUP_EVERY_N_MINUTES = 20
+ROTATION_EVERY_N_ITERATIONS = 10
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+
+    trayIcon = QSystemTrayIcon(
+        QIcon('icons/backup_in_pause.png'),
+        parent=app
+    )
+    # trayIcon.setToolTip('Check out my tray icon')
+    trayIcon.show()
+
+    menu = QMenu()
+    exitAction = menu.addAction('Exit')
+    exitAction.triggered.connect(app.quit)
+
+    trayIcon.setContextMenu(menu)
+
+    sys.exit(app.exec_())
