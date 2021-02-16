@@ -28,6 +28,20 @@ from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 BACKUP_EVERY_N_MINUTES = 20
 ROTATION_EVERY_N_ITERATIONS = 10
 
+ROTATE_TIME = 2
+ICONS = {
+    'backup_in_pause': 'icons/backup_in_pause.png',
+    'backup_success': 'icons/backup_success.png',
+    'backup_failed': 'icons/backup_failed.png',
+    'backup_no_network': 'icons/backup_no_network.png',
+    'backup_in_progress': 'icons/backup_in_progress.png',
+    'backup_in_progress_failed': 'icons/backup_in_progress_failed.png',
+    'backup_in_progress_no_network': 'icons/backup_in_progress.png',
+}
+state = {
+    'current_icon': 'backup_in_pause',
+}
+
 
 def restic_backup():
     print('-'*50)
@@ -36,14 +50,33 @@ def restic_backup():
     print()
 
 
+def icon_rotation():
+    global state
+    icons_order = [
+        'backup_failed',
+        'backup_in_pause',
+        'backup_in_progress_failed',
+        'backup_in_progress',
+        'backup_no_network',
+        'backup_success'
+    ]
+
+    index = icons_order.index(state['current_icon'])
+    next_icon_index = (index+1) % len(icons_order)
+    next_icon = icons_order[next_icon_index]
+    state['trayIcon'].setIcon(QIcon(ICONS[next_icon]))
+    state['current_icon'] = next_icon
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     trayIcon = QSystemTrayIcon(
-        QIcon('icons/backup_in_pause.png'),
+        QIcon(ICONS[state['current_icon']]),
         parent=app
     )
     trayIcon.show()
+    state['trayIcon'] = trayIcon
 
     menu = QMenu()
     exitAction = menu.addAction('Exit')
@@ -54,5 +87,9 @@ if __name__ == '__main__':
     timer = QTimer()
     timer.timeout.connect(restic_backup)
     timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
+
+    timer2 = QTimer()
+    timer2.timeout.connect(icon_rotation)
+    timer2.start(ROTATE_TIME * 1000)
 
     sys.exit(app.exec_())
