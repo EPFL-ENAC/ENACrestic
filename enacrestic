@@ -22,6 +22,7 @@ It uses the following files to be configured :
 import os
 import re
 import sys
+import time
 import datetime
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess
@@ -184,17 +185,16 @@ class ResticBackup():
         logger.error(stderr)
 
     def _handle_state(self, proc_state):
-        pass
-        # states = {
-        #     QProcess.NotRunning: 'Not running',
-        #     QProcess.Starting: 'Starting',
-        #     QProcess.Running: 'Running',
-        # }
-        # state_name = states[proc_state]
-        # print(f"State changed: {state_name}")
+        if proc_state == QProcess.Starting:
+            self.current_time_starting = time.time()
+            print('Chrono started')
+        elif proc_state == QProcess.NotRunning:
+            self.current_chrono = time.time() - self.current_time_starting
 
     def _process_finished(self):
-        logger.write("Process finished.\n")
+        logger.write(
+            f'Process finished in '
+            f'{self.current_chrono:.3f} seconds.\n')
         if self.p.exitStatus() == QProcess.NormalExit:
             if self.p.exitCode() == 0:
                 self.state.finished_backup('ok')
