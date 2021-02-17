@@ -34,6 +34,8 @@ RESTIC_USER_PREFS = {
     'FILESFROM': os.path.expanduser('~/.restic/bkp_include'),
     'PASSWORDFILE': os.path.expanduser('~/.restic/.pw'),
 }
+RESTIC_LOGFILE = os.path.expanduser('~/.restic/last_backups.log')
+
 ICONS = {
     'program_just_launched': 'icons/backup_success.png',
     'backup_in_pause': 'icons/backup_in_pause.png',
@@ -44,6 +46,31 @@ ICONS = {
     'backup_in_progress_failed': 'icons/backup_in_progress_failed.png',
     'backup_in_progress_no_network': 'icons/backup_in_progress_no_network.png',
 }
+
+
+class Logger():
+    '''
+    Manages the writing to log file
+    '''
+
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        self.f_handler = open(RESTIC_LOGFILE, 'a')
+        return self
+
+    def __exit__(self, typ, value, traceback):
+        self.f_handler.close()
+
+    def write(self, message='', end='\n'):
+        self.f_handler.write(f'{message}{end}')
+        self.f_handler.flush()
+        print(message, end=end)
+
+    def error(self, message, end='\n'):
+        lines = [f'! {line}' for line in message.split('\n')]
+        self.write('\n'.join(lines), end)
 
 
 class State():
@@ -110,12 +137,13 @@ class ResticBackup():
     Manages the execution of restic command
     '''
 
-    def __init__(self, state):
+    def __init__(self, state, logger):
         self.state = state
+        self.logger = logger
 
     def run(self):
-        print('-'*50)
-        print(datetime.datetime.now())
+        logger.write('-'*50)
+        logger.write(datetime.datetime.now())
 
         if not self.state.want_to_backup():
             print(
@@ -125,7 +153,7 @@ class ResticBackup():
             return
 
         # Run restic backup
-        print('Running restic backup!')
+        logger.write('Running restic backup!')
         cmd = 'restic'
         args = [
             'backup',
@@ -139,13 +167,13 @@ class ResticBackup():
         self.p.finished.connect(self._process_finished)
         self.p.start(cmd, args)
         self.current_error = ''
-        print()
+        logger.write()
 
     def _handle_stdout(self):
         data = self.p.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
         print("STDOUT :")
-        print(stdout)
+        logger.write(stdout)
 
     def _handle_stderr(self):
         data = self.p.readAllStandardError()
@@ -153,7 +181,7 @@ class ResticBackup():
         if re.search(r'timeout', stderr):
             self.current_error = 'timeout'
         print("STDERR :")
-        print(stderr)
+        logger.error(stderr)
 
     def _handle_state(self, proc_state):
         pass
@@ -166,7 +194,7 @@ class ResticBackup():
         # print(f"State changed: {state_name}")
 
     def _process_finished(self):
-        print("Process finished.")
+        logger.write("Process finished.\n")
         if self.p.exitStatus() == QProcess.NormalExit:
             if self.p.exitCode() == 0:
                 self.state.finished_backup('ok')
@@ -181,25 +209,26 @@ class ResticBackup():
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    with Logger() as logger:
+        app = QApplication(sys.argv)
 
-    tray_icon = QSystemTrayIcon(
-        QIcon(ICONS['program_just_launched']),
-        parent=app
-    )
-    tray_icon.show()
+        tray_icon = QSystemTrayIcon(
+            QIcon(ICONS['program_just_launched']),
+            parent=app
+        )
+        tray_icon.show()
 
-    menu = QMenu()
-    exitAction = menu.addAction('Exit')
-    exitAction.triggered.connect(app.quit)
+        menu = QMenu()
+        exitAction = menu.addAction('Exit')
+        exitAction.triggered.connect(app.quit)
 
-    tray_icon.setContextMenu(menu)
+        tray_icon.setContextMenu(menu)
 
-    state = State(tray_icon)
+        state = State(tray_icon)
 
-    restic_backup = ResticBackup(state)
-    timer = QTimer()
-    timer.timeout.connect(restic_backup.run)
-    timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
+        restic_backup = ResticBackup(state, logger)
+        timer = QTimer()
+        timer.timeout.connect(restic_backup.run)
+        timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
 
-    sys.exit(app.exec_())
+        sys.exit(app.exec_())
