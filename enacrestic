@@ -19,77 +19,182 @@ It uses the following files to be configured :
   + AWS_SECRET_ACCESS_KEY (if using S3)
 '''
 
+import re
 import sys
 import datetime
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QProcess
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 BACKUP_EVERY_N_MINUTES = 20
 ROTATION_EVERY_N_ITERATIONS = 10
 
-ROTATE_TIME = 2
 ICONS = {
+    'program_just_launched': 'icons/backup_success.png',
     'backup_in_pause': 'icons/backup_in_pause.png',
     'backup_success': 'icons/backup_success.png',
     'backup_failed': 'icons/backup_failed.png',
     'backup_no_network': 'icons/backup_no_network.png',
     'backup_in_progress': 'icons/backup_in_progress.png',
     'backup_in_progress_failed': 'icons/backup_in_progress_failed.png',
-    'backup_in_progress_no_network': 'icons/backup_in_progress.png',
-}
-state = {
-    'current_icon': 'backup_in_pause',
+    'backup_in_progress_no_network': 'icons/backup_in_progress_no_network.png',
 }
 
 
-def restic_backup():
-    print('-'*50)
-    print(datetime.datetime.now())
-    print('restic backup!')
-    print()
+class State():
+    '''
+    Stores the state of the application
+    Manages the transitions
+    Updates the icon to match the state
+    '''
+
+    def __init__(self, tray_icon):
+        self.tray_icon = tray_icon
+        self.current_icon = 'program_just_launched'
+
+    def want_to_backup(self):
+        '''
+        Answer if it is possible to run a backup
+        it modifies the state (and icon if True)
+        '''
+        if self.current_icon == 'program_just_launched':
+            self.current_icon = 'backup_in_progress'
+
+        elif self.current_icon == 'backup_in_pause':
+            return False
+
+        elif self.current_icon == 'backup_success':
+            self.current_icon = 'backup_in_progress'
+
+        elif self.current_icon == 'backup_failed':
+            self.current_icon = 'backup_in_progress_failed'
+
+        elif self.current_icon == 'backup_no_network':
+            self.current_icon = 'backup_in_progress_no_network'
+
+        elif self.current_icon == 'backup_in_progress':
+            return False
+
+        elif self.current_icon == 'backup_in_progress_failed':
+            return False
+
+        elif self.current_icon == 'backup_in_progress_no_network':
+            return False
+
+        self._update_icon()
+        return True
+
+    def finished_backup(self, completion_status):
+        '''Modify state because backup finished'''
+        if completion_status == 'ok':
+            self.current_icon = 'backup_success'
+        elif completion_status == 'no network':
+            self.current_icon = 'backup_no_network'
+        else:
+            self.current_icon = 'backup_failed'
+        self._update_icon()
+
+    def _update_icon(self):
+        '''Update icon to current state'''
+        print(f'update icon to {self.current_icon}')
+        self.tray_icon.setIcon(QIcon(ICONS[self.current_icon]))
 
 
-def icon_rotation():
-    global state
-    icons_order = [
-        'backup_failed',
-        'backup_in_pause',
-        'backup_in_progress_failed',
-        'backup_in_progress',
-        'backup_no_network',
-        'backup_success'
-    ]
+class ResticBackup():
+    '''
+    Manages the execution of restic command
+    '''
 
-    index = icons_order.index(state['current_icon'])
-    next_icon_index = (index+1) % len(icons_order)
-    next_icon = icons_order[next_icon_index]
-    state['trayIcon'].setIcon(QIcon(ICONS[next_icon]))
-    state['current_icon'] = next_icon
+    def __init__(self, state):
+        self.state = state
+
+    def run(self):
+        print('-'*50)
+        print(datetime.datetime.now())
+
+        if not self.state.want_to_backup():
+            print(
+                f'Backup not launched. '
+                f'current state is {self.state.current_icon}'
+            )
+            return
+
+        # Run restic backup
+        print('Running restic backup!')
+        cmd = 'restic'
+        args = [
+            'backup',
+            '--files-from', '/home/sbancal/.restic/bkp_include',
+            '--password-file', '/home/sbancal/.restic/.pw'
+        ]
+        self.p = QProcess()
+        self.p.readyReadStandardOutput.connect(self._handle_stdout)
+        self.p.readyReadStandardError.connect(self._handle_stderr)
+        self.p.stateChanged.connect(self._handle_state)
+        self.p.finished.connect(self._process_finished)
+        self.p.start(cmd, args)
+        self.current_error = ''
+        print()
+
+    def _handle_stdout(self):
+        data = self.p.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        print("STDOUT :")
+        print(stdout)
+
+    def _handle_stderr(self):
+        data = self.p.readAllStandardError()
+        stderr = bytes(data).decode("utf8")
+        if re.search(r'timeout', stderr):
+            self.current_error = 'timeout'
+        print("STDERR :")
+        print(stderr)
+
+    def _handle_state(self, proc_state):
+        pass
+        # states = {
+        #     QProcess.NotRunning: 'Not running',
+        #     QProcess.Starting: 'Starting',
+        #     QProcess.Running: 'Running',
+        # }
+        # state_name = states[proc_state]
+        # print(f"State changed: {state_name}")
+
+    def _process_finished(self):
+        print("Process finished.")
+        if self.p.exitStatus() == QProcess.NormalExit:
+            if self.p.exitCode() == 0:
+                self.state.finished_backup('ok')
+            else:
+                if self.current_error == 'timeout':
+                    self.state.finished_backup('no network')
+                else:
+                    self.state.finished_backup('failed')
+        else:
+            self.state.finished_backup('failed')
+        self.p = None
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    trayIcon = QSystemTrayIcon(
-        QIcon(ICONS[state['current_icon']]),
+    tray_icon = QSystemTrayIcon(
+        QIcon(ICONS['program_just_launched']),
         parent=app
     )
-    trayIcon.show()
-    state['trayIcon'] = trayIcon
+    tray_icon.show()
 
     menu = QMenu()
     exitAction = menu.addAction('Exit')
     exitAction.triggered.connect(app.quit)
 
-    trayIcon.setContextMenu(menu)
+    tray_icon.setContextMenu(menu)
 
+    state = State(tray_icon)
+
+    restic_backup = ResticBackup(state)
     timer = QTimer()
-    timer.timeout.connect(restic_backup)
+    timer.timeout.connect(restic_backup.run)
     timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
-
-    timer2 = QTimer()
-    timer2.timeout.connect(icon_rotation)
-    timer2.start(ROTATE_TIME * 1000)
 
     sys.exit(app.exec_())
