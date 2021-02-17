@@ -19,6 +19,7 @@ It uses the following files to be configured :
   + AWS_SECRET_ACCESS_KEY (if using S3)
 '''
 
+import os
 import re
 import sys
 import datetime
@@ -29,6 +30,10 @@ from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 BACKUP_EVERY_N_MINUTES = 20
 ROTATION_EVERY_N_ITERATIONS = 10
 
+RESTIC_USER_PREFS = {
+    'FILESFROM': os.path.expanduser('~/.restic/bkp_include'),
+    'PASSWORDFILE': os.path.expanduser('~/.restic/.pw'),
+}
 ICONS = {
     'program_just_launched': 'icons/backup_success.png',
     'backup_in_pause': 'icons/backup_in_pause.png',
@@ -124,8 +129,8 @@ class ResticBackup():
         cmd = 'restic'
         args = [
             'backup',
-            '--files-from', '/home/sbancal/.restic/bkp_include',
-            '--password-file', '/home/sbancal/.restic/.pw'
+            '--files-from', RESTIC_USER_PREFS['FILESFROM'],
+            '--password-file', RESTIC_USER_PREFS['PASSWORDFILE']
         ]
         self.p = QProcess()
         self.p.readyReadStandardOutput.connect(self._handle_stdout)
