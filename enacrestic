@@ -147,7 +147,7 @@ class ResticBackup():
         logger.write(datetime.datetime.now())
 
         if not self.state.want_to_backup():
-            print(
+            logger.write(
                 f'Backup not launched. '
                 f'current state is {self.state.current_icon}'
             )
@@ -173,7 +173,6 @@ class ResticBackup():
     def _handle_stdout(self):
         data = self.p.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
-        print("STDOUT :")
         logger.write(stdout)
 
     def _handle_stderr(self):
@@ -181,13 +180,11 @@ class ResticBackup():
         stderr = bytes(data).decode("utf8")
         if re.search(r'timeout', stderr):
             self.current_error = 'timeout'
-        print("STDERR :")
         logger.error(stderr)
 
     def _handle_state(self, proc_state):
         if proc_state == QProcess.Starting:
             self.current_time_starting = time.time()
-            print('Chrono started')
         elif proc_state == QProcess.NotRunning:
             self.current_chrono = time.time() - self.current_time_starting
 
