@@ -17,6 +17,13 @@ It uses the following files to be configured :
   + RESTIC_REPOSITORY
   + AWS_ACCESS_KEY_ID (if using S3)
   + AWS_SECRET_ACCESS_KEY (if using S3)
+
+It writes to the following files :
+
++ ~/.enacrestic/last_backups.log
+  All execution log
++ ~/.enacrestic/state.json
+  State of previous execution
 '''
 
 import os
