@@ -84,7 +84,7 @@ class State():
     Updates the icon to match the state
     '''
 
-    DEF_START_ICON = 'program_just_launched'
+    DEF_START_STATE = 'program_just_launched'
     DEF_NB_BACKUPS_BEFORE_FORGET = ROTATION_EVERY_N_ITERATIONS
 
     def __init__(self, tray_icon):
@@ -94,28 +94,28 @@ class State():
         try:
             with open(RESTIC_STATEFILE) as fh:
                 state_from_file = json.load(fh)
-                self.current_icon = state_from_file.get(
-                    'current_icon',
-                    State.DEF_START_ICON
+                self.current_state = state_from_file.get(
+                    'current_state',
+                    State.DEF_START_STATE
                 )
                 self.nb_backups_before_forget = state_from_file.get(
                     'nb_backups_before_forget',
                     State.DEF_NB_BACKUPS_BEFORE_FORGET
                 )
         except FileNotFoundError:
-            self.current_icon = State.DEF_START_ICON
+            self.current_state = State.DEF_START_STATE
             self.nb_backups_before_forget = State.DEF_NB_BACKUPS_BEFORE_FORGET
 
         self._update_icon()
         return self
 
     def __exit__(self, typ, value, traceback):
-        if self.current_icon.startswith('backup_in_progress'):
-            self.current_icon = 'backup_failed'
+        if self.current_state.startswith('backup_in_progress'):
+            self.current_state = 'backup_failed'
         with open(RESTIC_STATEFILE, 'w') as fh:
             json.dump(
                 {
-                    'current_icon': self.current_icon,
+                    'current_state': self.current_state,
                     'nb_backups_before_forget': self.nb_backups_before_forget,
                 },
                 fh
@@ -126,31 +126,31 @@ class State():
         Answer if it is possible to run a backup
         it modifies the state (and icon if True)
         '''
-        if self.current_icon == 'program_just_launched':
-            self.current_icon = 'backup_in_progress'
+        if self.current_state == 'program_just_launched':
+            self.current_state = 'backup_in_progress'
 
-        elif self.current_icon == 'backup_in_pause':
+        elif self.current_state == 'backup_in_pause':
             return False
 
-        elif self.current_icon == 'backup_success':
-            self.current_icon = 'backup_in_progress'
+        elif self.current_state == 'backup_success':
+            self.current_state = 'backup_in_progress'
 
-        elif self.current_icon == 'backup_failed':
-            self.current_icon = 'backup_in_progress_failed'
+        elif self.current_state == 'backup_failed':
+            self.current_state = 'backup_in_progress_failed'
 
-        elif self.current_icon == 'backup_no_network':
-            self.current_icon = 'backup_in_progress_no_network'
+        elif self.current_state == 'backup_no_network':
+            self.current_state = 'backup_in_progress_no_network'
 
-        elif self.current_icon == 'backup_in_progress':
+        elif self.current_state == 'backup_in_progress':
             return False
 
-        elif self.current_icon == 'backup_in_progress_failed':
+        elif self.current_state == 'backup_in_progress_failed':
             return False
 
-        elif self.current_icon == 'backup_in_progress_no_network':
+        elif self.current_state == 'backup_in_progress_no_network':
             return False
 
-        elif self.current_icon == 'forget_in_progress':
+        elif self.current_state == 'forget_in_progress':
             return False
 
         self._update_icon()
@@ -164,29 +164,29 @@ class State():
         + 'ok' otherwise
         '''
         if completion_status == 'ok':
-            if self.current_icon == 'forget_in_progress':
-                self.current_icon = 'backup_success'
+            if self.current_state == 'forget_in_progress':
+                self.current_state = 'backup_success'
             else:  # that was a backup in progress
                 self.nb_backups_before_forget -= 1
                 if self.nb_backups_before_forget == 0:
                     self.nb_backups_before_forget = ROTATION_EVERY_N_ITERATIONS
-                    self.current_icon = 'forget_in_progress'
+                    self.current_state = 'forget_in_progress'
                 else:
-                    self.current_icon = 'backup_success'
+                    self.current_state = 'backup_success'
         elif completion_status == 'no network':
-            self.current_icon = 'backup_no_network'
+            self.current_state = 'backup_no_network'
         else:
-            self.current_icon = 'backup_failed'
+            self.current_state = 'backup_failed'
         self._update_icon()
-        if self.current_icon == 'forget_in_progress':
+        if self.current_state == 'forget_in_progress':
             return 'run forget'
         else:
             return 'ok'
 
     def _update_icon(self):
         '''Update icon to current state'''
-        print(f'update icon to {self.current_icon}')
-        self.tray_icon.setIcon(QIcon(ICONS[self.current_icon]))
+        print(f'update icon to {self.current_state}')
+        self.tray_icon.setIcon(QIcon(ICONS[self.current_state]))
 
 
 class ResticBackup():
@@ -205,7 +205,7 @@ class ResticBackup():
         if not self.state.want_to_backup():
             logger.write(
                 f'Backup not launched. '
-                f'current state is {self.state.current_icon}'
+                f'current state is {self.state.current_state}'
             )
             return
 
