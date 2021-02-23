@@ -46,6 +46,7 @@ ICONS = {
     'backup_in_progress': 'icons/backup_in_progress.png',
     'backup_in_progress_failed': 'icons/backup_in_progress_failed.png',
     'backup_in_progress_no_network': 'icons/backup_in_progress_no_network.png',
+    'forget_in_progress': 'icons/backup_in_progress.png',
 }
 
 
@@ -84,6 +85,7 @@ class State():
     def __init__(self, tray_icon):
         self.tray_icon = tray_icon
         self.current_icon = 'program_just_launched'
+        self.nb_backups_before_forget = ROTATION_EVERY_N_ITERATIONS
 
     def want_to_backup(self):
         '''
@@ -114,18 +116,38 @@ class State():
         elif self.current_icon == 'backup_in_progress_no_network':
             return False
 
+        elif self.current_icon == 'forget_in_progress':
+            return False
+
         self._update_icon()
         return True
 
-    def finished_backup(self, completion_status):
-        '''Modify state because backup finished'''
+    def finished_restic_cmd(self, completion_status):
+        '''
+        Modify state because backup/forget command finished
+        returns :
+        + 'run forget' if it is the right condition to do so
+        + 'ok' otherwise
+        '''
         if completion_status == 'ok':
-            self.current_icon = 'backup_success'
+            if self.current_icon == 'forget_in_progress':
+                self.current_icon = 'backup_success'
+            else:  # that was a backup in progress
+                self.nb_backups_before_forget -= 1
+                if self.nb_backups_before_forget == 0:
+                    self.nb_backups_before_forget = ROTATION_EVERY_N_ITERATIONS
+                    self.current_icon = 'forget_in_progress'
+                else:
+                    self.current_icon = 'backup_success'
         elif completion_status == 'no network':
             self.current_icon = 'backup_no_network'
         else:
             self.current_icon = 'backup_failed'
         self._update_icon()
+        if self.current_icon == 'forget_in_progress':
+            return 'run forget'
+        else:
+            return 'ok'
 
     def _update_icon(self):
         '''Update icon to current state'''
@@ -154,6 +176,10 @@ class ResticBackup():
             return
 
         # Run restic backup
+        self._run_backup()
+        logger.write()
+
+    def _run_backup(self):
         logger.write('Running restic backup!')
         cmd = 'restic'
         args = [
@@ -161,6 +187,24 @@ class ResticBackup():
             '--files-from', RESTIC_USER_PREFS['FILESFROM'],
             '--password-file', RESTIC_USER_PREFS['PASSWORDFILE']
         ]
+        self._run(cmd, args)
+
+    def _run_forget(self):
+        logger.write('Running restic forget!')
+        cmd = 'restic'
+        args = [
+            'forget', '--prune', '-g', 'host', '-c',
+            '--password-file', RESTIC_USER_PREFS['PASSWORDFILE'],
+            '--keep-last', '3',
+            '--keep-hourly', '24',
+            '--keep-daily', '7',
+            '--keep-weekly', '4',
+            '--keep-monthly', '12',
+            '--keep-yearly', '5',
+        ]
+        self._run(cmd, args)
+
+    def _run(self, cmd, args):
         self.p = QProcess()
         self.p.readyReadStandardOutput.connect(self._handle_stdout)
         self.p.readyReadStandardError.connect(self._handle_stderr)
@@ -168,7 +212,6 @@ class ResticBackup():
         self.p.finished.connect(self._process_finished)
         self.p.start(cmd, args)
         self.current_error = ''
-        logger.write()
 
     def _handle_stdout(self):
         data = self.p.readAllStandardOutput()
@@ -192,17 +235,21 @@ class ResticBackup():
         logger.write(
             f'Process finished in '
             f'{self.current_chrono:.3f} seconds.\n')
+        next_action = ''
         if self.p.exitStatus() == QProcess.NormalExit:
             if self.p.exitCode() == 0:
-                self.state.finished_backup('ok')
+                next_action = self.state.finished_restic_cmd('ok')
             else:
                 if self.current_error == 'timeout':
-                    self.state.finished_backup('no network')
+                    self.state.finished_restic_cmd('no network')
                 else:
-                    self.state.finished_backup('failed')
+                    self.state.finished_restic_cmd('failed')
         else:
-            self.state.finished_backup('failed')
+            self.state.finished_restic_cmd('failed')
+
         self.p = None
+        if next_action == 'run forget':
+            self._run_forget()
 
 
 if __name__ == '__main__':
