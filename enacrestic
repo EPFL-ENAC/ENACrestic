@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import time
+import json
 import datetime
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess
@@ -36,6 +37,7 @@ RESTIC_USER_PREFS = {
     'PASSWORDFILE': os.path.expanduser('~/.restic/.pw'),
 }
 RESTIC_LOGFILE = os.path.expanduser('~/.restic/last_backups.log')
+RESTIC_STATEFILE = os.path.expanduser('~/.restic/state.json')
 
 ICONS = {
     'program_just_launched': 'icons/backup_success.png',
@@ -82,10 +84,42 @@ class State():
     Updates the icon to match the state
     '''
 
+    DEF_START_ICON = 'program_just_launched'
+    DEF_NB_BACKUPS_BEFORE_FORGET = ROTATION_EVERY_N_ITERATIONS
+
     def __init__(self, tray_icon):
         self.tray_icon = tray_icon
-        self.current_icon = 'program_just_launched'
-        self.nb_backups_before_forget = ROTATION_EVERY_N_ITERATIONS
+
+    def __enter__(self):
+        try:
+            with open(RESTIC_STATEFILE) as fh:
+                state_from_file = json.load(fh)
+                self.current_icon = state_from_file.get(
+                    'current_icon',
+                    State.DEF_START_ICON
+                )
+                self.nb_backups_before_forget = state_from_file.get(
+                    'nb_backups_before_forget',
+                    State.DEF_NB_BACKUPS_BEFORE_FORGET
+                )
+        except FileNotFoundError:
+            self.current_icon = State.DEF_START_ICON
+            self.nb_backups_before_forget = State.DEF_NB_BACKUPS_BEFORE_FORGET
+
+        self._update_icon()
+        return self
+
+    def __exit__(self, typ, value, traceback):
+        if self.current_icon.startswith('backup_in_progress'):
+            self.current_icon = 'backup_failed'
+        with open(RESTIC_STATEFILE, 'w') as fh:
+            json.dump(
+                {
+                    'current_icon': self.current_icon,
+                    'nb_backups_before_forget': self.nb_backups_before_forget,
+                },
+                fh
+            )
 
     def want_to_backup(self):
         '''
@@ -268,11 +302,10 @@ if __name__ == '__main__':
 
         tray_icon.setContextMenu(menu)
 
-        state = State(tray_icon)
+        with State(tray_icon) as state:
+            restic_backup = ResticBackup(state, logger)
+            timer = QTimer()
+            timer.timeout.connect(restic_backup.run)
+            timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
 
-        restic_backup = ResticBackup(state, logger)
-        timer = QTimer()
-        timer.timeout.connect(restic_backup.run)
-        timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
-
-        sys.exit(app.exec_())
+            sys.exit(app.exec_())
