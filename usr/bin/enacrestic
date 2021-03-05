@@ -50,7 +50,7 @@ ICONS_FOLDER = os.path.abspath(f'{__file__}/../../share/pixmaps/enacrestic')
 
 ICONS = {
     'program_just_launched':
-        f'{ICONS_FOLDER}/backup_success.png',
+        f'{ICONS_FOLDER}/just_launched.png',
     'backup_in_pause':
         f'{ICONS_FOLDER}/backup_in_pause.png',
     'backup_success':
@@ -62,11 +62,11 @@ ICONS = {
     'backup_in_progress':
         f'{ICONS_FOLDER}/backup_in_progress.png',
     'backup_in_progress_failed':
-        f'{ICONS_FOLDER}/backup_in_progress_failed.png',
-    'backup_in_progress_no_network':
-        f'{ICONS_FOLDER}/backup_in_progress_no_network.png',
-    'forget_in_progress':
         f'{ICONS_FOLDER}/backup_in_progress.png',
+    'backup_in_progress_no_network':
+        f'{ICONS_FOLDER}/backup_in_progress.png',
+    'forget_in_progress':
+        f'{ICONS_FOLDER}/forget_in_progress.png',
 }
 
 
