@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ENACrestic
+Comment=Automated Backup with restic
+Exec=/usr/bin/enacrestic
+Icon=enacrestic
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=NetwUtility;Archiving;
+Name[en_US]=ENACrestic

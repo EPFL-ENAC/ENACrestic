@@ -46,16 +46,27 @@ RESTIC_USER_PREFS = {
 RESTIC_LOGFILE = os.path.expanduser('~/.restic/last_backups.log')
 RESTIC_STATEFILE = os.path.expanduser('~/.restic/state.json')
 
+ICONS_FOLDER = os.path.abspath(f'{__file__}/../../share/pixmaps/enacrestic')
+
 ICONS = {
-    'program_just_launched': 'icons/backup_success.png',
-    'backup_in_pause': 'icons/backup_in_pause.png',
-    'backup_success': 'icons/backup_success.png',
-    'backup_failed': 'icons/backup_failed.png',
-    'backup_no_network': 'icons/backup_no_network.png',
-    'backup_in_progress': 'icons/backup_in_progress.png',
-    'backup_in_progress_failed': 'icons/backup_in_progress_failed.png',
-    'backup_in_progress_no_network': 'icons/backup_in_progress_no_network.png',
-    'forget_in_progress': 'icons/backup_in_progress.png',
+    'program_just_launched':
+        f'{ICONS_FOLDER}/backup_success.png',
+    'backup_in_pause':
+        f'{ICONS_FOLDER}/backup_in_pause.png',
+    'backup_success':
+        f'{ICONS_FOLDER}/backup_success.png',
+    'backup_failed':
+        f'{ICONS_FOLDER}/backup_failed.png',
+    'backup_no_network':
+        f'{ICONS_FOLDER}/backup_no_network.png',
+    'backup_in_progress':
+        f'{ICONS_FOLDER}/backup_in_progress.png',
+    'backup_in_progress_failed':
+        f'{ICONS_FOLDER}/backup_in_progress_failed.png',
+    'backup_in_progress_no_network':
+        f'{ICONS_FOLDER}/backup_in_progress_no_network.png',
+    'forget_in_progress':
+        f'{ICONS_FOLDER}/backup_in_progress.png',
 }
 
 
@@ -73,6 +84,10 @@ class Logger():
 
     def __exit__(self, typ, value, traceback):
         self.f_handler.close()
+
+    def write_new_date_section(self):
+        message = '-' * 50 + f'\n{datetime.datetime.now()}'
+        self.write(message)
 
     def write(self, message='', end='\n'):
         self.f_handler.write(f'{message}{end}')
@@ -206,8 +221,7 @@ class ResticBackup():
         self.logger = logger
 
     def run(self):
-        logger.write('-'*50)
-        logger.write(datetime.datetime.now())
+        logger.write_new_date_section()
 
         if not self.state.want_to_backup():
             logger.write(
@@ -314,5 +328,8 @@ if __name__ == '__main__':
             timer = QTimer()
             timer.timeout.connect(restic_backup.run)
             timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
+
+            logger.write_new_date_section()
+            logger.write('Started ENACrestic application')
 
             sys.exit(app.exec_())
