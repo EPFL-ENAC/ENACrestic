@@ -144,7 +144,9 @@ class State():
                     'current_state': self.current_state,
                     'nb_backups_before_forget': self.nb_backups_before_forget,
                 },
-                fh
+                fh,
+                sort_keys=True,
+                indent=4
             )
 
     def want_to_backup(self):
