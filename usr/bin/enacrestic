@@ -80,9 +80,13 @@ class Logger():
 
     def __enter__(self):
         self.f_handler = open(RESTIC_LOGFILE, 'a')
+        self.write_new_date_section()
+        self.write('Started ENACrestic application\n')
         return self
 
     def __exit__(self, typ, value, traceback):
+        self.write_new_date_section()
+        self.write('Closed ENACrestic application\n')
         self.f_handler.close()
 
     def write_new_date_section(self):
@@ -328,8 +332,5 @@ if __name__ == '__main__':
             timer = QTimer()
             timer.timeout.connect(restic_backup.run)
             timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
-
-            logger.write_new_date_section()
-            logger.write('Started ENACrestic application')
 
             sys.exit(app.exec_())
