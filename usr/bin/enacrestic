@@ -112,6 +112,7 @@ class State():
 
     DEF_START_STATE = 'program_just_launched'
     DEF_NB_BACKUPS_BEFORE_FORGET = ROTATION_EVERY_N_ITERATIONS
+    NB_CHRONOS_TO_SAVE = 10
 
     def __init__(self, tray_icon):
         self.tray_icon = tray_icon
@@ -128,9 +129,19 @@ class State():
                     'nb_backups_before_forget',
                     State.DEF_NB_BACKUPS_BEFORE_FORGET
                 )
-        except FileNotFoundError:
+                self.prev_backup_chronos = state_from_file.get(
+                    'prev_backup_chronos',
+                    []
+                )
+                self.prev_forget_chronos = state_from_file.get(
+                    'prev_forget_chronos',
+                    []
+                )
+        except (FileNotFoundError, json.decoder.JSONDecodeError):
             self.current_state = State.DEF_START_STATE
             self.nb_backups_before_forget = State.DEF_NB_BACKUPS_BEFORE_FORGET
+            self.prev_backup_chronos = []
+            self.prev_forget_chronos = []
 
         self._update_icon()
         return self
@@ -143,6 +154,8 @@ class State():
                 {
                     'current_state': self.current_state,
                     'nb_backups_before_forget': self.nb_backups_before_forget,
+                    'prev_backup_chronos': self.prev_backup_chronos,
+                    'prev_forget_chronos': self.prev_forget_chronos,
                 },
                 fh,
                 sort_keys=True,
@@ -182,9 +195,10 @@ class State():
             return False
 
         self._update_icon()
+        self._save_chrono_start_datetime()
         return True
 
-    def finished_restic_cmd(self, completion_status):
+    def finished_restic_cmd(self, completion_status, chrono):
         '''
         Modify state because backup/forget command finished
         returns :
@@ -194,6 +208,7 @@ class State():
         if completion_status == 'ok':
             if self.current_state == 'forget_in_progress':
                 self.current_state = 'backup_success'
+                self._save_new_chrono('forget', chrono)
             else:  # that was a backup in progress
                 self.nb_backups_before_forget -= 1
                 if self.nb_backups_before_forget == 0:
@@ -201,15 +216,34 @@ class State():
                     self.current_state = 'forget_in_progress'
                 else:
                     self.current_state = 'backup_success'
+                self._save_new_chrono('backup', chrono)
         elif completion_status == 'no network':
             self.current_state = 'backup_no_network'
         else:
             self.current_state = 'backup_failed'
         self._update_icon()
         if self.current_state == 'forget_in_progress':
+            self._save_chrono_start_datetime()
             return 'run forget'
         else:
             return 'ok'
+
+    def _save_chrono_start_datetime(self):
+        '''Store datetime just before a new backup/forget operation starts'''
+        self.start_datetime = datetime.datetime.now()
+
+    def _save_new_chrono(self, action, chrono):
+        '''Store new chrono to previous backup/forget chronos'''
+        now = self.start_datetime.strftime('%Y-%m-%d %H:%M:%S')
+        chrono = round(chrono, 2)  # Keep only 2 digits
+        if action == 'backup':
+            self.prev_backup_chronos.insert(0, (now, chrono))
+            if len(self.prev_backup_chronos) > State.NB_CHRONOS_TO_SAVE:
+                self.prev_backup_chronos.pop()
+        else:
+            self.prev_forget_chronos.insert(0, (now, chrono))
+            if len(self.prev_forget_chronos) > State.NB_CHRONOS_TO_SAVE:
+                self.prev_forget_chronos.pop()
 
     def _update_icon(self):
         '''Update icon to current state'''
@@ -227,9 +261,8 @@ class ResticBackup():
         self.logger = logger
 
     def run(self):
-        logger.write_new_date_section()
-
         if not self.state.want_to_backup():
+            logger.write_new_date_section()
             logger.write(
                 f'Backup not launched. '
                 f'current state is {self.state.current_state}'
@@ -241,6 +274,7 @@ class ResticBackup():
         logger.write()
 
     def _run_backup(self):
+        logger.write_new_date_section()
         logger.write('Running restic backup!')
         cmd = 'restic'
         args = [
@@ -251,6 +285,7 @@ class ResticBackup():
         self._run(cmd, args)
 
     def _run_forget(self):
+        logger.write_new_date_section()
         logger.write('Running restic forget!')
         cmd = 'restic'
         args = [
@@ -299,14 +334,22 @@ class ResticBackup():
         next_action = ''
         if self.p.exitStatus() == QProcess.NormalExit:
             if self.p.exitCode() == 0:
-                next_action = self.state.finished_restic_cmd('ok')
+                next_action = self.state.finished_restic_cmd(
+                    'ok', self.current_chrono
+                )
             else:
                 if self.current_error == 'timeout':
-                    self.state.finished_restic_cmd('no network')
+                    self.state.finished_restic_cmd(
+                        'no network', self.current_chrono
+                    )
                 else:
-                    self.state.finished_restic_cmd('failed')
+                    self.state.finished_restic_cmd(
+                        'failed', self.current_chrono
+                    )
         else:
-            self.state.finished_restic_cmd('failed')
+            self.state.finished_restic_cmd(
+                'failed', self.current_chrono
+            )
 
         self.p = None
         if next_action == 'run forget':
