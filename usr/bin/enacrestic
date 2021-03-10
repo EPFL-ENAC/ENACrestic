@@ -136,7 +136,7 @@ class State():
         return self
 
     def __exit__(self, typ, value, traceback):
-        if self.current_state.startswith('backup_in_progress'):
+        if 'in_progress' in self.current_state:
             self.current_state = 'backup_failed'
         with open(RESTIC_STATEFILE, 'w') as fh:
             json.dump(
