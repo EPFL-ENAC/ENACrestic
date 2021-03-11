@@ -114,8 +114,9 @@ class State():
     DEF_NB_BACKUPS_BEFORE_FORGET = ROTATION_EVERY_N_ITERATIONS
     NB_CHRONOS_TO_SAVE = 10
 
-    def __init__(self, tray_icon):
+    def __init__(self, tray_icon, info_action):
         self.tray_icon = tray_icon
+        self.info_action = info_action
 
     def __enter__(self):
         try:
@@ -194,8 +195,8 @@ class State():
         elif self.current_state == 'forget_in_progress':
             return False
 
-        self._update_icon()
         self._save_chrono_start_datetime()
+        self._update_icon()
         return True
 
     def finished_restic_cmd(self, completion_status, chrono):
@@ -221,34 +222,105 @@ class State():
             self.current_state = 'backup_no_network'
         else:
             self.current_state = 'backup_failed'
-        self._update_icon()
         if self.current_state == 'forget_in_progress':
             self._save_chrono_start_datetime()
+            self._update_icon()
             return 'run forget'
         else:
+            self._update_icon()
             return 'ok'
 
     def _save_chrono_start_datetime(self):
         '''Store datetime just before a new backup/forget operation starts'''
-        self.start_datetime = datetime.datetime.now()
+        self.start_datetime = datetime.datetime.now(). \
+            strftime('%Y-%m-%d %H:%M:%S')
 
     def _save_new_chrono(self, action, chrono):
         '''Store new chrono to previous backup/forget chronos'''
-        now = self.start_datetime.strftime('%Y-%m-%d %H:%M:%S')
         chrono = round(chrono, 2)  # Keep only 2 digits
         if action == 'backup':
-            self.prev_backup_chronos.insert(0, (now, chrono))
+            self.prev_backup_chronos.insert(0, (self.start_datetime, chrono))
             if len(self.prev_backup_chronos) > State.NB_CHRONOS_TO_SAVE:
                 self.prev_backup_chronos.pop()
         else:
-            self.prev_forget_chronos.insert(0, (now, chrono))
+            self.prev_forget_chronos.insert(0, (self.start_datetime, chrono))
             if len(self.prev_forget_chronos) > State.NB_CHRONOS_TO_SAVE:
                 self.prev_forget_chronos.pop()
 
     def _update_icon(self):
-        '''Update icon to current state'''
-        print(f'update icon to {self.current_state}')
+        '''
+        Update icon to current state
+        Update info_action with current state infos
+        '''
+
+        def _str_date(str_date):
+            '''return nice date (with only h:m:s if it's in the last 24h)'''
+            date = datetime.datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S')
+            if datetime.datetime.now() - date < datetime.timedelta(days=1):
+                return 'at %s' % date.strftime('%H:%M:%S')
+            else:
+                return 'on %s' % date.strftime('%Y-%m-%d %H:%M:%S')
+
+        def _str_duration(seconds):
+            '''
+            return nice duration with hours and minutes only when necessary
+            '''
+            seconds = int(seconds)
+            hours, seconds = divmod(seconds, 3600)
+            minutes, seconds = divmod(seconds, 60)
+            if hours > 0:
+                return f'{hours}h {minutes}m {seconds}s'
+            elif minutes > 0:
+                return f'{minutes}m {seconds}s'
+            else:
+                return f'{seconds}s'
+
+        def _str_last_chronos(subject, list_chronos):
+            '''returns msg with latest chrono and average over the last n'''
+            nb_chronos = len(list_chronos)
+            if nb_chronos == 0:
+                return ''
+            msg = '''
+-> %s
+   latest %s : %s''' % (
+                subject,
+                _str_date(list_chronos[0][0]),
+                _str_duration(list_chronos[0][1])
+            )
+            if nb_chronos >= 2:
+                sum_chronos = sum([chrono[1] for chrono in list_chronos])
+                average_chrono = sum_chronos / nb_chronos
+                msg += '''
+   average over the last %d : %s''' % (
+                    nb_chronos,
+                    _str_duration(average_chrono)
+                )
+            return msg
+
         self.tray_icon.setIcon(QIcon(ICONS[self.current_state]))
+
+        if self.current_state == 'program_just_launched':
+            state_msg = \
+                f'ENACrestic just launched\n' \
+                f'A backup will be done every ' \
+                f'{BACKUP_EVERY_N_MINUTES} minutes.'
+        elif self.current_state == 'backup_in_pause':
+            state_msg = 'ENACrestic is paused'
+        elif self.current_state == 'backup_success':
+            state_msg = 'Success'
+        elif self.current_state == 'backup_failed':
+            state_msg = 'Last backup failed'
+        elif self.current_state == 'backup_no_network':
+            state_msg = 'Network timeout'
+        if self.current_state.startswith('backup_in_progress'):
+            state_msg = 'Backup launched %s' % _str_date(self.start_datetime)
+        elif self.current_state == 'forget_in_progress':
+            state_msg = 'Cleanup launched %s' % _str_date(self.start_datetime)
+
+        # Add conditionnal stats on last backups and last cleanup
+        state_msg += _str_last_chronos('Backup', self.prev_backup_chronos)
+        state_msg += _str_last_chronos('Cleanup', self.prev_forget_chronos)
+        self.info_action.setText(state_msg)
 
 
 class ResticBackup():
@@ -367,12 +439,16 @@ if __name__ == '__main__':
         tray_icon.show()
 
         menu = QMenu()
-        exitAction = menu.addAction('Exit')
-        exitAction.triggered.connect(app.quit)
+        # Entry to display informations to the user
+        info_action = menu.addAction('ENACrestic launched')
 
+        menu.addSection('Actions')
+        # Entry to exit the application by the user
+        exit_action = menu.addAction('Exit')
+        exit_action.triggered.connect(app.quit)
         tray_icon.setContextMenu(menu)
 
-        with State(tray_icon) as state:
+        with State(tray_icon, info_action) as state:
             restic_backup = ResticBackup(state, logger)
             timer = QTimer()
             timer.timeout.connect(restic_backup.run)
