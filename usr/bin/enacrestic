@@ -309,7 +309,9 @@ class State():
         elif self.current_state == 'backup_success':
             state_msg = 'Success'
         elif self.current_state == 'backup_failed':
-            state_msg = 'Last backup failed'
+            state_msg = \
+                f'Last backup failed\n' \
+                f'See {RESTIC_LOGFILE} for details.'
         elif self.current_state == 'backup_no_network':
             state_msg = 'Network timeout'
         if self.current_state.startswith('backup_in_progress'):
