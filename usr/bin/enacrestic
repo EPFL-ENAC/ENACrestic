@@ -33,7 +33,7 @@ import time
 import json
 import datetime
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QTimer, QProcess
+from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 BACKUP_EVERY_N_MINUTES = 20
@@ -42,6 +42,7 @@ ROTATION_EVERY_N_ITERATIONS = 10
 RESTIC_USER_PREFS = {
     'FILESFROM': os.path.expanduser('~/.restic/bkp_include'),
     'PASSWORDFILE': os.path.expanduser('~/.restic/.pw'),
+    'ENV': os.path.expanduser('~/.restic/env.sh'),
 }
 RESTIC_LOGFILE = os.path.expanduser('~/.restic/last_backups.log')
 RESTIC_STATEFILE = os.path.expanduser('~/.restic/state.json')
@@ -333,6 +334,7 @@ class ResticBackup():
     def __init__(self, state, logger):
         self.state = state
         self.logger = logger
+        self._load_env_variables()
 
     def run(self):
         if not self.state.want_to_backup():
@@ -346,6 +348,36 @@ class ResticBackup():
         # Run restic backup
         self._run_backup()
         logger.write()
+
+    def _load_env_variables(self):
+        '''
+        Load expected env vars from ~/.enacrestic/env.sh
+        to be used by restic commands
+        '''
+        self.env = QProcessEnvironment.systemEnvironment()
+        variables_i_search = [
+            r'RESTIC_\S+',
+            r'AWS_ACCESS_KEY_ID',
+            r'AWS_SECRET_ACCESS_KEY',
+        ]
+        try:
+            with open(RESTIC_USER_PREFS['ENV'], 'r') as f:
+                for line in f.readlines():
+                    # remove comments
+                    # A) starting with #
+                    # B) having ' #'
+                    line = re.sub(r'^#.*', '', line)
+                    line = re.sub(r'\s+#.*', '', line)
+
+                    for var in variables_i_search:
+                        match = re.match(r'export (%s)=(.*)$' % var, line)
+                        if match:
+                            self.env.insert(match.group(1), match.group(2))
+        except FileNotFoundError:
+            pass
+        if not self.env.contains('RESTIC_REPOSITORY'):
+            logger.write(f'Warning: {RESTIC_USER_PREFS["ENV"]} '
+                         f'seems not configured correctly')
 
     def _run_backup(self):
         logger.write_new_date_section()
@@ -376,6 +408,7 @@ class ResticBackup():
 
     def _run(self, cmd, args):
         self.p = QProcess()
+        self.p.setProcessEnvironment(self.env)
         self.p.readyReadStandardOutput.connect(self._handle_stdout)
         self.p.readyReadStandardError.connect(self._handle_stderr)
         self.p.stateChanged.connect(self._handle_state)
