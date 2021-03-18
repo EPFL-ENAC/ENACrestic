@@ -6,5 +6,6 @@ Icon=enacrestic
 Terminal=false
 Type=Application
 Encoding=UTF-8
-Categories=NetwUtility;Archiving;
+Categories=Utility;Archiving;
+Keywords=backup;enac;restic
 Name[en_US]=ENACrestic
