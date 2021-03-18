@@ -135,6 +135,8 @@ class State():
                     'current_state',
                     State.DEF_START_STATE
                 )
+                if self.current_state != 'backup_in_pause':
+                    self.current_state = State.DEF_START_STATE
                 self.nb_backups_before_forget = state_from_file.get(
                     'nb_backups_before_forget',
                     State.DEF_NB_BACKUPS_BEFORE_FORGET
