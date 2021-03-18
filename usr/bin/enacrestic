@@ -50,7 +50,7 @@ RESTIC_AUTOSTART_FILE = os.path.expanduser(
     '~/.config/autostart/enacrestic.desktop'
 )
 
-ENACRESTIC_BIN = __file__
+ENACRESTIC_BIN = os.path.abspath(__file__)
 
 ICONS_FOLDER = os.path.abspath(f'{__file__}/../../share/pixmaps/enacrestic')
 
