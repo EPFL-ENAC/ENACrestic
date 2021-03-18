@@ -36,8 +36,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 
-BACKUP_EVERY_N_MINUTES = 20
-ROTATION_EVERY_N_ITERATIONS = 10
+DEF_BACKUP_EVERY_N_MINUTES = 20
+DEF_FORGET_EVERY_N_ITERATIONS = 10
 
 RESTIC_USER_PREFS = {
     'FILESFROM': os.path.expanduser('~/.restic/bkp_include'),
@@ -117,7 +117,7 @@ class State():
     '''
 
     DEF_START_STATE = 'program_just_launched'
-    DEF_NB_BACKUPS_BEFORE_FORGET = ROTATION_EVERY_N_ITERATIONS
+    DEF_NB_BACKUPS_BEFORE_FORGET = DEF_FORGET_EVERY_N_ITERATIONS
     NB_CHRONOS_TO_SAVE = 10
     DEF_AUTOSTART = False
 
@@ -151,12 +151,22 @@ class State():
                     'autostart',
                     State.DEF_AUTOSTART
                 )
+                self.backup_every_n_minutes = state_from_file.get(
+                    'backup_every_n_minutes',
+                    DEF_BACKUP_EVERY_N_MINUTES
+                )
+                self.forget_every_n_iterations = state_from_file.get(
+                    'forget_every_n_iterations',
+                    DEF_FORGET_EVERY_N_ITERATIONS
+                )
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             self.current_state = State.DEF_START_STATE
             self.nb_backups_before_forget = State.DEF_NB_BACKUPS_BEFORE_FORGET
             self.prev_backup_chronos = []
             self.prev_forget_chronos = []
             self.autostart = State.DEF_AUTOSTART
+            self.backup_every_n_minutes = DEF_BACKUP_EVERY_N_MINUTES
+            self.forget_every_n_iterations = DEF_FORGET_EVERY_N_ITERATIONS
 
         self._update_icon()
 
@@ -176,6 +186,9 @@ class State():
                     'prev_backup_chronos': self.prev_backup_chronos,
                     'prev_forget_chronos': self.prev_forget_chronos,
                     'autostart': self.autostart,
+                    'backup_every_n_minutes': self.backup_every_n_minutes,
+                    'forget_every_n_iterations':
+                        self.forget_every_n_iterations,
                 },
                 fh,
                 sort_keys=True,
@@ -232,7 +245,8 @@ class State():
             else:  # that was a backup in progress
                 self.nb_backups_before_forget -= 1
                 if self.nb_backups_before_forget == 0:
-                    self.nb_backups_before_forget = ROTATION_EVERY_N_ITERATIONS
+                    self.nb_backups_before_forget = \
+                        self.forget_every_n_iterations
                     self.current_state = 'forget_in_progress'
                 else:
                     self.current_state = 'backup_success'
@@ -322,7 +336,7 @@ class State():
             state_msg = \
                 f'ENACrestic just launched\n' \
                 f'A backup will be done every ' \
-                f'{BACKUP_EVERY_N_MINUTES} minutes.'
+                f'{self.backup_every_n_minutes} minutes.'
         elif self.current_state == 'backup_in_pause':
             state_msg = 'ENACrestic is paused'
         elif self.current_state == 'backup_success':
@@ -539,6 +553,6 @@ if __name__ == '__main__':
             restic_backup = ResticBackup(state, logger)
             timer = QTimer()
             timer.timeout.connect(restic_backup.run)
-            timer.start(BACKUP_EVERY_N_MINUTES * 60 * 1000)
+            timer.start(state.backup_every_n_minutes * 60 * 1000)
 
             sys.exit(app.exec_())
