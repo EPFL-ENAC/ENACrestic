@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pyqt5 = "*"
+psutil = "*"
 
 [dev-packages]
 

@@ -29,8 +29,11 @@ It writes to the following files :
 import os
 import re
 import sys
+import pwd
 import time
 import json
+import psutil
+import getpass
 import datetime
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
@@ -51,6 +54,10 @@ RESTIC_AUTOSTART_FILE = os.path.expanduser(
 )
 
 ENACRESTIC_BIN = os.path.abspath(__file__)
+
+USERNAME = getpass.getuser()
+UID = pwd.getpwnam(USERNAME).pw_uid
+PID_FILE = f'/run/user/{UID}/enacrestic.pid'
 
 ICONS_FOLDER = os.path.abspath(f'{__file__}/../../share/pixmaps/enacrestic')
 
@@ -74,6 +81,56 @@ ICONS = {
     'forget_in_progress':
         f'{ICONS_FOLDER}/forget_in_progress.png',
 }
+
+
+class AlreadyRunningError(Exception):
+    pass
+
+
+class PIDFile(object):
+    '''
+    This class is copied from pidfile
+    https://raw.githubusercontent.com/mosquito/python-pidfile/master/pidfile/pidfile.py
+    '''
+    def __init__(self, filename):
+        self._process_name = psutil.Process(os.getpid()).cmdline()[0]
+        self._file = filename
+
+    @property
+    def is_running(self):
+        if not os.path.exists(self._file):
+            return False
+
+        with open(self._file, "r") as f:
+            try:
+                pid = int(f.read())
+            except (OSError, ValueError):
+                return False
+
+        if not psutil.pid_exists(pid):
+            return False
+
+        try:
+            cmd1 = psutil.Process(pid).cmdline()[0]
+            return cmd1 == self._process_name
+        except psutil.AccessDenied:
+            return False
+
+    def __enter__(self):
+        if self.is_running:
+            raise AlreadyRunningError
+
+        with open(self._file, "w") as f:
+            f.write(str(os.getpid()))
+
+        return self
+
+    def __exit__(self, *args):
+        if os.path.exists(self._file):
+            try:
+                os.remove(self._file)
+            except OSError:
+                pass
 
 
 class Logger():
@@ -530,33 +587,38 @@ class ResticBackup():
 
 if __name__ == '__main__':
     with Logger() as logger:
-        app = QApplication(sys.argv)
+        try:
+            with PIDFile(PID_FILE):
+                app = QApplication(sys.argv)
 
-        tray_icon = QSystemTrayIcon(
-            QIcon(ICONS['program_just_launched']),
-            parent=app
-        )
-        tray_icon.show()
+                tray_icon = QSystemTrayIcon(
+                    QIcon(ICONS['program_just_launched']),
+                    parent=app
+                )
+                tray_icon.show()
 
-        menu = QMenu()
-        # Entry to display informations to the user
-        info_action = menu.addAction('ENACrestic launched')
+                menu = QMenu()
+                # Entry to display informations to the user
+                info_action = menu.addAction('ENACrestic launched')
 
-        menu.addSection('Actions')
+                menu.addSection('Actions')
 
-        # Entry to set if the application has to auto-start with the session
-        autostart_action = QAction('Auto-start', checkable=True)
-        menu.addAction(autostart_action)
+                # Entry to set if the application has
+                # to auto-start with the session
+                autostart_action = QAction('Auto-start', checkable=True)
+                menu.addAction(autostart_action)
 
-        # Entry to exit the application by the user
-        exit_action = menu.addAction('Exit')
-        exit_action.triggered.connect(app.quit)
-        tray_icon.setContextMenu(menu)
+                # Entry to exit the application by the user
+                exit_action = menu.addAction('Exit')
+                exit_action.triggered.connect(app.quit)
+                tray_icon.setContextMenu(menu)
 
-        with State(tray_icon, info_action, autostart_action) as state:
-            restic_backup = ResticBackup(state, logger)
-            timer = QTimer()
-            timer.timeout.connect(restic_backup.run)
-            timer.start(state.backup_every_n_minutes * 60 * 1000)
+                with State(tray_icon, info_action, autostart_action) as state:
+                    restic_backup = ResticBackup(state, logger)
+                    timer = QTimer()
+                    timer.timeout.connect(restic_backup.run)
+                    timer.start(state.backup_every_n_minutes * 60 * 1000)
 
-            sys.exit(app.exec_())
+                    sys.exit(app.exec_())
+        except AlreadyRunningError:
+            logger.write('Already running -> quit')
