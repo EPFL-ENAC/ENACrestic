@@ -316,8 +316,7 @@ class State():
             if nb_chronos == 0:
                 return ''
             msg = '''
--> %s
-   latest %s : %s''' % (
+-> latest %s %s : %s''' % (
                 subject,
                 _str_date(list_chronos[0][0]),
                 _str_duration(list_chronos[0][1])
@@ -355,8 +354,11 @@ class State():
             state_msg = 'Cleanup launched %s' % _str_date(self.start_datetime)
 
         # Add conditionnal stats on last backups and last cleanup
-        state_msg += _str_last_chronos('Backup', self.prev_backup_chronos)
-        state_msg += _str_last_chronos('Cleanup', self.prev_forget_chronos)
+        last_chronos = _str_last_chronos('Backup', self.prev_backup_chronos)
+        last_chronos += _str_last_chronos('Cleanup', self.prev_forget_chronos)
+        if last_chronos != '':
+            state_msg += '\n'
+            state_msg += last_chronos
         self.info_action.setText(state_msg)
 
     def _toggle_autostart(self):
