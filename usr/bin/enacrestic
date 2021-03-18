@@ -34,7 +34,7 @@ import json
 import datetime
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 
 BACKUP_EVERY_N_MINUTES = 20
 ROTATION_EVERY_N_ITERATIONS = 10
@@ -46,6 +46,11 @@ RESTIC_USER_PREFS = {
 }
 RESTIC_LOGFILE = os.path.expanduser('~/.restic/last_backups.log')
 RESTIC_STATEFILE = os.path.expanduser('~/.restic/state.json')
+RESTIC_AUTOSTART_FILE = os.path.expanduser(
+    '~/.config/autostart/enacrestic.desktop'
+)
+
+ENACRESTIC_BIN = __file__
 
 ICONS_FOLDER = os.path.abspath(f'{__file__}/../../share/pixmaps/enacrestic')
 
@@ -114,10 +119,13 @@ class State():
     DEF_START_STATE = 'program_just_launched'
     DEF_NB_BACKUPS_BEFORE_FORGET = ROTATION_EVERY_N_ITERATIONS
     NB_CHRONOS_TO_SAVE = 10
+    DEF_AUTOSTART = False
 
-    def __init__(self, tray_icon, info_action):
+    def __init__(self, tray_icon, info_action, autostart_action):
         self.tray_icon = tray_icon
         self.info_action = info_action
+        self.autostart_action = autostart_action
+        self.autostart_action.triggered.connect(self._toggle_autostart)
 
     def __enter__(self):
         try:
@@ -139,13 +147,22 @@ class State():
                     'prev_forget_chronos',
                     []
                 )
+                self.autostart = state_from_file.get(
+                    'autostart',
+                    State.DEF_AUTOSTART
+                )
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             self.current_state = State.DEF_START_STATE
             self.nb_backups_before_forget = State.DEF_NB_BACKUPS_BEFORE_FORGET
             self.prev_backup_chronos = []
             self.prev_forget_chronos = []
+            self.autostart = State.DEF_AUTOSTART
 
         self._update_icon()
+
+        # Update autostart state
+        self.autostart_action.setChecked(self.autostart)
+
         return self
 
     def __exit__(self, typ, value, traceback):
@@ -158,6 +175,7 @@ class State():
                     'nb_backups_before_forget': self.nb_backups_before_forget,
                     'prev_backup_chronos': self.prev_backup_chronos,
                     'prev_forget_chronos': self.prev_forget_chronos,
+                    'autostart': self.autostart,
                 },
                 fh,
                 sort_keys=True,
@@ -325,6 +343,35 @@ class State():
         state_msg += _str_last_chronos('Cleanup', self.prev_forget_chronos)
         self.info_action.setText(state_msg)
 
+    def _toggle_autostart(self):
+        '''Save and apply user's choice to autostart or not'''
+        self.autostart = self.autostart_action.isChecked()
+        if self.autostart:
+            # Want the app to autostart with user's session
+            autostart_folder = os.path.dirname(RESTIC_AUTOSTART_FILE)
+            os.makedirs(autostart_folder, exist_ok=True)
+            with open(RESTIC_AUTOSTART_FILE, 'w') as f:
+                f.write(f'''\
+[Desktop Entry]
+Name=ENACrestic
+Comment=Automated Backup with restic
+Exec=/usr/bin/sh -c "/usr/bin/sleep 20; {ENACRESTIC_BIN}"
+Icon=enacrestic
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=Utility;Archiving;
+Keywords=backup;enac;restic
+Name[en_US]=ENACrestic
+X-GNOME-Autostart-enabled=true
+''')
+        else:
+            # Users doesn't want ENACrestic to autostart
+            try:
+                os.remove(RESTIC_AUTOSTART_FILE)
+            except FileNotFoundError:
+                pass
+
 
 class ResticBackup():
     '''
@@ -478,12 +525,17 @@ if __name__ == '__main__':
         info_action = menu.addAction('ENACrestic launched')
 
         menu.addSection('Actions')
+
+        # Entry to set if the application has to auto-start with the session
+        autostart_action = QAction('Auto-start', checkable=True)
+        menu.addAction(autostart_action)
+
         # Entry to exit the application by the user
         exit_action = menu.addAction('Exit')
         exit_action.triggered.connect(app.quit)
         tray_icon.setContextMenu(menu)
 
-        with State(tray_icon, info_action) as state:
+        with State(tray_icon, info_action, autostart_action) as state:
             restic_backup = ResticBackup(state, logger)
             timer = QTimer()
             timer.timeout.connect(restic_backup.run)
