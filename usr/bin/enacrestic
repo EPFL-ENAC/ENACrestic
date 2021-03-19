@@ -353,19 +353,46 @@ class State():
             else:
                 return 'on %s' % date.strftime('%Y-%m-%d %H:%M:%S')
 
-        def _str_duration(seconds):
+        def _str_duration(seconds, shortest=False):
             '''
-            return nice duration with hours and minutes only when necessary
+            return nice duration as __h __m __s
+            if not shortest :
+                __s | __m __s | __h __m __s
+            if shortest :
+                __h | __m | __s |
+                __h __m | __m __s |
+                __h __m __s
             '''
             seconds = int(seconds)
             hours, seconds = divmod(seconds, 3600)
             minutes, seconds = divmod(seconds, 60)
-            if hours > 0:
-                return f'{hours}h {minutes}m {seconds}s'
-            elif minutes > 0:
-                return f'{minutes}m {seconds}s'
+            if shortest:
+                if hours > 0:
+                    if minutes > 0:
+                        if seconds > 0:
+                            return f'{hours}h {minutes}m {seconds}s'
+                        else:
+                            return f'{hours}h {minutes}m'
+                    else:
+                        if seconds > 0:
+                            return f'{hours}h {minutes}m {seconds}s'
+                        else:
+                            return f'{hours}h'
+                else:
+                    if minutes > 0:
+                        if seconds > 0:
+                            return f'{minutes}m {seconds}s'
+                        else:
+                            return f'{minutes}m'
+                    else:
+                        return f'{seconds}s'
             else:
-                return f'{seconds}s'
+                if hours > 0:
+                    return f'{hours}h {minutes}m {seconds}s'
+                elif minutes > 0:
+                    return f'{minutes}m {seconds}s'
+                else:
+                    return f'{seconds}s'
 
         def _str_last_chronos(subject, list_chronos):
             '''returns msg with latest chrono and average over the last n'''
@@ -394,7 +421,7 @@ class State():
             state_msg = \
                 f'ENACrestic just launched\n' \
                 f'A backup will be done every ' \
-                f'{self.backup_every_n_minutes} minutes.'
+                f'{_str_duration(self.backup_every_n_minutes * 60, True)}.'
         elif self.current_state == 'backup_in_pause':
             state_msg = 'ENACrestic is paused'
         elif self.current_state == 'backup_success':
