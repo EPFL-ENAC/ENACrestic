@@ -53,13 +53,13 @@ RESTIC_AUTOSTART_FILE = os.path.expanduser(
     '~/.config/autostart/enacrestic.desktop'
 )
 
-ENACRESTIC_BIN = os.path.abspath(__file__)
+ENACRESTIC_BIN = os.path.abspath(sys.argv[0])
 
 USERNAME = getpass.getuser()
 UID = pwd.getpwnam(USERNAME).pw_uid
 PID_FILE = f'/run/user/{UID}/enacrestic.pid'
 
-ICONS_FOLDER = os.path.abspath(f'{__file__}/../../share/pixmaps/enacrestic')
+ICONS_FOLDER = os.path.abspath(f'{__file__}/../pixmaps')
 
 ICONS = {
     'program_just_launched':
@@ -487,8 +487,8 @@ class ResticBackup():
 
     def run(self):
         if not self.state.want_to_backup():
-            logger.write_new_date_section()
-            logger.write(
+            self.logger.write_new_date_section()
+            self.logger.write(
                 f'Backup not launched. '
                 f'current state is {self.state.current_state}'
             )
@@ -496,7 +496,7 @@ class ResticBackup():
 
         # Run restic backup
         self._run_backup()
-        logger.write()
+        self.logger.write()
 
     def _load_env_variables(self):
         '''
@@ -525,12 +525,12 @@ class ResticBackup():
         except FileNotFoundError:
             pass
         if not self.env.contains('RESTIC_REPOSITORY'):
-            logger.write(f'Warning: {RESTIC_USER_PREFS["ENV"]} '
-                         f'seems not configured correctly')
+            self.logger.write(f'Warning: {RESTIC_USER_PREFS["ENV"]} '
+                              f'seems not configured correctly')
 
     def _run_backup(self):
-        logger.write_new_date_section()
-        logger.write('Running restic backup!')
+        self.logger.write_new_date_section()
+        self.logger.write('Running restic backup!')
         cmd = 'restic'
         args = [
             'backup',
@@ -540,8 +540,8 @@ class ResticBackup():
         self._run(cmd, args)
 
     def _run_forget(self):
-        logger.write_new_date_section()
-        logger.write('Running restic forget!')
+        self.logger.write_new_date_section()
+        self.logger.write('Running restic forget!')
         cmd = 'restic'
         args = [
             'forget', '--prune', '-g', 'host', '-c',
@@ -568,14 +568,14 @@ class ResticBackup():
     def _handle_stdout(self):
         data = self.p.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
-        logger.write(stdout)
+        self.logger.write(stdout)
 
     def _handle_stderr(self):
         data = self.p.readAllStandardError()
         stderr = bytes(data).decode("utf8")
         if re.search(r'timeout', stderr):
             self.current_error = 'timeout'
-        logger.error(stderr)
+        self.logger.error(stderr)
 
     def _handle_state(self, proc_state):
         if proc_state == QProcess.Starting:
@@ -584,7 +584,7 @@ class ResticBackup():
             self.current_chrono = time.time() - self.current_time_starting
 
     def _process_finished(self):
-        logger.write(
+        self.logger.write(
             f'Process finished in '
             f'{self.current_chrono:.3f} seconds.\n')
         next_action = ''
@@ -612,7 +612,7 @@ class ResticBackup():
             self._run_forget()
 
 
-if __name__ == '__main__':
+def main():
     with Logger() as logger:
         try:
             with PIDFile(PID_FILE):
@@ -649,3 +649,7 @@ if __name__ == '__main__':
                     sys.exit(app.exec_())
         except AlreadyRunningError:
             logger.write('Already running -> quit')
+
+
+if __name__ == '__main__':
+    main()

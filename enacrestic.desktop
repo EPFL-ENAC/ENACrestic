@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=ENACrestic
 Comment=Automated Backup with restic
-Exec=/usr/bin/enacrestic
+Exec=enacrestic
 Icon=enacrestic
 Terminal=false
 Type=Application
