@@ -39,7 +39,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 
-DEF_BACKUP_EVERY_N_MINUTES = 20
+DEF_BACKUP_EVERY_N_MINUTES = 30
 DEF_FORGET_EVERY_N_ITERATIONS = 10
 
 RESTIC_USER_PREFS = {
