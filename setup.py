@@ -60,6 +60,11 @@ setup(
         'enacrestic': ['pixmaps/*.png'],
     },
 
+    data_files=[
+        ('share/applications', ['enacrestic.desktop']),
+        ('share/icons', ['enacrestic.png']),
+    ],
+
     entry_points={
         'console_scripts': [
             'enacrestic=enacrestic:main',
