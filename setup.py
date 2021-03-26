@@ -18,7 +18,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='ENACrestic',
-    version='0.0.1',
+    version='0.1.0',
     description='Automate backups using restic',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -46,9 +46,8 @@ setup(
     python_requires='>=3.6, <4',
 
     install_requires=[
-        'pyqt5',
-        'psutil',
-        'pidfile',
+        'PyQt5',
+        'python-pidfile',
     ],
 
     extras_require={

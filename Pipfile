@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyqt5 = "*"
-psutil = "*"
+PyQt5 = "*"
+python-pidfile = "*"
 
 [dev-packages]
 

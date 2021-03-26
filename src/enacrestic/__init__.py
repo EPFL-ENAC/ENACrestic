@@ -32,9 +32,9 @@ import sys
 import pwd
 import time
 import json
-import psutil
 import getpass
 import datetime
+from pidfile import AlreadyRunningError, PIDFile
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
@@ -81,56 +81,6 @@ ICONS = {
     'forget_in_progress':
         f'{ICONS_FOLDER}/forget_in_progress.png',
 }
-
-
-class AlreadyRunningError(Exception):
-    pass
-
-
-class PIDFile(object):
-    '''
-    This class is copied from pidfile
-    https://raw.githubusercontent.com/mosquito/python-pidfile/master/pidfile/pidfile.py
-    '''
-    def __init__(self, filename):
-        self._process_name = psutil.Process(os.getpid()).cmdline()[0]
-        self._file = filename
-
-    @property
-    def is_running(self):
-        if not os.path.exists(self._file):
-            return False
-
-        with open(self._file, "r") as f:
-            try:
-                pid = int(f.read())
-            except (OSError, ValueError):
-                return False
-
-        if not psutil.pid_exists(pid):
-            return False
-
-        try:
-            cmd1 = psutil.Process(pid).cmdline()[0]
-            return cmd1 == self._process_name
-        except psutil.AccessDenied:
-            return False
-
-    def __enter__(self):
-        if self.is_running:
-            raise AlreadyRunningError
-
-        with open(self._file, "w") as f:
-            f.write(str(os.getpid()))
-
-        return self
-
-    def __exit__(self, *args):
-        if os.path.exists(self._file):
-            try:
-                os.remove(self._file)
-            except OSError:
-                pass
 
 
 class Logger():
