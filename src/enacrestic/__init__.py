@@ -42,13 +42,14 @@ from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
 DEF_BACKUP_EVERY_N_MINUTES = 30
 DEF_FORGET_EVERY_N_ITERATIONS = 10
 
+ENACRESTIC_PREF_FOLDER = os.path.expanduser('~/.enacrestic')
 RESTIC_USER_PREFS = {
-    'FILESFROM': os.path.expanduser('~/.restic/bkp_include'),
-    'PASSWORDFILE': os.path.expanduser('~/.restic/.pw'),
-    'ENV': os.path.expanduser('~/.restic/env.sh'),
+    'FILESFROM': os.path.join(ENACRESTIC_PREF_FOLDER, 'bkp_include'),
+    'PASSWORDFILE': os.path.join(ENACRESTIC_PREF_FOLDER, '.pw'),
+    'ENV': os.path.join(ENACRESTIC_PREF_FOLDER, 'env.sh'),
 }
-RESTIC_LOGFILE = os.path.expanduser('~/.restic/last_backups.log')
-RESTIC_STATEFILE = os.path.expanduser('~/.restic/state.json')
+RESTIC_LOGFILE = os.path.join(ENACRESTIC_PREF_FOLDER, 'last_backups.log')
+RESTIC_STATEFILE = os.path.join(ENACRESTIC_PREF_FOLDER, 'state.json')
 RESTIC_AUTOSTART_FILE = os.path.expanduser(
     '~/.config/autostart/enacrestic.desktop'
 )
@@ -563,6 +564,10 @@ class ResticBackup():
 
 
 def main():
+    # Create pref folder if doesn't exist yet
+    if not os.path.exists(ENACRESTIC_PREF_FOLDER):
+        os.makedirs(ENACRESTIC_PREF_FOLDER)
+
     with Logger() as logger:
         try:
             with PIDFile(PID_FILE):
