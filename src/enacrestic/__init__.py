@@ -134,6 +134,7 @@ class State():
         self.info_action = info_action
         self.autostart_action = autostart_action
         self.autostart_action.triggered.connect(self._toggle_autostart)
+        self.last_failed_datetime = None
 
     def __enter__(self):
         try:
@@ -188,6 +189,8 @@ class State():
     def __exit__(self, typ, value, traceback):
         if 'in_progress' in self.current_state:
             self.current_state = 'backup_failed'
+            self.last_failed_datetime = datetime.datetime.now(). \
+                strftime('%Y-%m-%d %H:%M:%S')
         with open(RESTIC_STATEFILE, 'w') as fh:
             json.dump(
                 {
@@ -263,8 +266,12 @@ class State():
                 self._save_new_chrono('backup', chrono)
         elif completion_status == 'no network':
             self.current_state = 'backup_no_network'
+            self.last_failed_datetime = datetime.datetime.now(). \
+                strftime('%Y-%m-%d %H:%M:%S')
         else:
             self.current_state = 'backup_failed'
+            self.last_failed_datetime = datetime.datetime.now(). \
+                strftime('%Y-%m-%d %H:%M:%S')
         if self.current_state == 'forget_in_progress':
             self._save_chrono_start_datetime()
             self._update_icon()
@@ -379,10 +386,10 @@ class State():
             state_msg = 'Success'
         elif self.current_state == 'backup_failed':
             state_msg = \
-                f'Last backup failed\n' \
+                f'Last backup failed {_str_date(self.last_failed_datetime)}\n' \
                 f'See {RESTIC_LOGFILE} for details.'
         elif self.current_state == 'backup_no_network':
-            state_msg = 'Network timeout'
+            state_msg = 'Network timeout {_str_date(self.last_failed_datetime)}'
         if self.current_state.startswith('backup_in_progress'):
             state_msg = 'Backup launched %s' % _str_date(self.start_datetime)
         elif self.current_state == 'forget_in_progress':
