@@ -3,7 +3,7 @@
 '''
 Does :
 
-+ Run every 20 minutes : `restic backup`
++ Run every 30 minutes : `restic backup`
 + Run every 10 iteration : `restic forget` (for the backup rotation)
 
 It uses the following files to be configured :
@@ -129,12 +129,19 @@ class State():
     NB_CHRONOS_TO_SAVE = 10
     DEF_AUTOSTART = False
 
-    def __init__(self, tray_icon, info_action, autostart_action):
+    def __init__(self):
+        self.tray_icon = None  # filled by connect_to_gui
+        self.info_action = None  # filled by connect_to_gui
+        self.autostart_action = None  # filled by connect_to_gui
+        self.last_failed_datetime = None
+
+    def connect_to_gui(self, tray_icon, info_action, autostart_action):
         self.tray_icon = tray_icon
         self.info_action = info_action
         self.autostart_action = autostart_action
         self.autostart_action.triggered.connect(self._toggle_autostart)
-        self.last_failed_datetime = None
+        self.autostart_action.setChecked(self.autostart)
+        self._update_icon()
 
     def __enter__(self):
         try:
@@ -180,10 +187,6 @@ class State():
             self.forget_every_n_iterations = DEF_FORGET_EVERY_N_ITERATIONS
 
         self._update_icon()
-
-        # Update autostart state
-        self.autostart_action.setChecked(self.autostart)
-
         return self
 
     def __exit__(self, typ, value, traceback):
@@ -373,6 +376,9 @@ class State():
                 )
             return msg
 
+        if self.tray_icon is None:
+            return
+
         self.tray_icon.setIcon(QIcon(ICONS[self.current_state]))
 
         if self.current_state == 'program_just_launched':
@@ -405,6 +411,10 @@ class State():
 
     def _toggle_autostart(self):
         '''Save and apply user's choice to autostart or not'''
+
+        if self.autostart_action is None:
+            return
+
         self.autostart = self.autostart_action.isChecked()
         if self.autostart:
             # Want the app to autostart with user's session
@@ -415,7 +425,7 @@ class State():
 [Desktop Entry]
 Name=ENACrestic
 Comment=Automated Backup with restic
-Exec=/usr/bin/sh -c "/usr/bin/sleep 20; {ENACRESTIC_BIN}"
+Exec={ENACRESTIC_BIN}
 Icon=enacrestic
 Terminal=false
 Type=Application
@@ -448,7 +458,7 @@ class ResticBackup():
             self.logger.write_new_date_section()
             self.logger.write(
                 f'Backup not launched. '
-                f'current state is {self.state.current_state}'
+                f'Current state is {self.state.current_state}'
             )
             return
 
@@ -570,6 +580,52 @@ class ResticBackup():
             self._run_forget()
 
 
+class QTEnacRestic(QApplication):
+    '''
+    Main app, starting QApplication and QSystemTrayIcon when it's ready.
+    '''
+
+    def __init__(self, argv, logger, state):
+        super().__init__(argv)
+        self.logger = logger
+        self.state = state
+
+        QTimer.singleShot(
+            2000,
+            self._start_when_systray_available
+        )
+
+    def _start_when_systray_available(self):
+        self.tray_icon = QSystemTrayIcon(
+            QIcon(ICONS['program_just_launched']),
+            parent=self
+        )
+        self.tray_icon.show()
+
+        menu = QMenu()
+        # Entry to display informations to the user
+        info_action = menu.addAction('ENACrestic launched')
+
+        menu.addSection('Actions')
+
+        # Entry to set if the application has
+        # to auto-start with the session
+        autostart_action = QAction('Auto-start', checkable=True)
+        menu.addAction(autostart_action)
+
+        # Entry to exit the application by the user
+        exit_action = menu.addAction('Exit')
+        exit_action.triggered.connect(self.quit)
+
+        self.tray_icon.setContextMenu(menu)
+
+        self.state.connect_to_gui(self.tray_icon, info_action, autostart_action)
+        self.restic_backup = ResticBackup(self.state, self.logger)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.restic_backup.run)
+        self.timer.start(self.state.backup_every_n_minutes * 60_000)
+
+
 def main():
     # Create pref folder if doesn't exist yet
     if not os.path.exists(ENACRESTIC_PREF_FOLDER):
@@ -578,36 +634,8 @@ def main():
     with Logger() as logger:
         try:
             with PIDFile(PID_FILE):
-                app = QApplication(sys.argv)
-
-                tray_icon = QSystemTrayIcon(
-                    QIcon(ICONS['program_just_launched']),
-                    parent=app
-                )
-                tray_icon.show()
-
-                menu = QMenu()
-                # Entry to display informations to the user
-                info_action = menu.addAction('ENACrestic launched')
-
-                menu.addSection('Actions')
-
-                # Entry to set if the application has
-                # to auto-start with the session
-                autostart_action = QAction('Auto-start', checkable=True)
-                menu.addAction(autostart_action)
-
-                # Entry to exit the application by the user
-                exit_action = menu.addAction('Exit')
-                exit_action.triggered.connect(app.quit)
-                tray_icon.setContextMenu(menu)
-
-                with State(tray_icon, info_action, autostart_action) as state:
-                    restic_backup = ResticBackup(state, logger)
-                    timer = QTimer()
-                    timer.timeout.connect(restic_backup.run)
-                    timer.start(state.backup_every_n_minutes * 60 * 1000)
-
+                with State() as state:
+                    app = QTEnacRestic(sys.argv, logger, state)
                     sys.exit(app.exec_())
         except AlreadyRunningError:
             logger.write('Already running -> quit')
