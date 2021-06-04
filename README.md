@@ -5,10 +5,139 @@
 A simple Qt GUI to automate backups with [restic](https://restic.net/)
 
 1. Automate your *restic* backups at a choosen frequency
-2. Run *restic forget* in a regular basis to keep your backup light and useful
+2. Run *restic forget* in a regular basis (and transparently) to keep your backup light and useful
 3. Let you see when :
   + ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
   + ![forget_in_progress](doc_pixmaps/forget_in_progress.png) `restic forget` is running
   + ![backup_success](doc_pixmaps/backup_success.png) backup is completed
   + ![backup_failed](doc_pixmaps/backup_failed.png) last backup failed
   + ![backup_no_network](doc_pixmaps/backup_no_network.png) last backup failed because of a network timeout (maybe the VPN is not running?)
+
+
+# Installation
+
+This has been tested and validated on
+
++ *Ubuntu 18.04 LTS*
++ *Ubuntu 20.04 LTS*
+
+```bash
+sudo apt install restic python3-pip
+pip3 install --user ENACrestic
+```
+
+
+# Config ENACrestic
+
+```bash
+mkdir ~/.enacrestic
+```
+
+### Edit `~/.enacrestic/env.sh` file
+
+Choose the right section according to your destination storage
+
+```snip
+# Local (not recommended!)
+export RESTIC_REPOSITORY=/path/to/my/restic-repo
+
+# SSH / SFTP
+export RESTIC_REPOSITORY=sftp:my-server.epfl.ch:/home/username/path
+
+# S3 Bucket
+export RESTIC_REPOSITORY=s3:s3.epfl.ch/bucket_name/restic_MyComputerName
+export AWS_ACCESS_KEY_ID=TheBucketRWAccessKey
+export AWS_SECRET_ACCESS_KEY=TheBucketRWSecretKey
+```
+
+### Edit `~/.enacrestic/.pw` file
+
+Add a one line password in it. This is used to encrypt your backups.
+
+**Be careful !** If you loose this password ... you loose your backups.
+
+### Edit `~/.enacrestic/bkp_include` file
+
+Add one line per folder / file that has to be backed up.
+
+Example for user `username` :
+
+```snip
+/home/username/.enacrestic/
+/home/username/Documents/
+/home/username/Teaching/
+/home/username/Pictures/
+/home/username/Projects/
+/home/username/Learn/
+/home/username/.gitconfig
+/home/username/.mozilla/
+/home/username/.ssh/
+# heavy !
+/home/username/Videos/
+```
+
+note : Lines starting with a `#` are ignored.
+
+### Edit `~/.bashrc` or `~/.zshrc` (depending on your shell)
+
+Add the following 2 lines to have :
++ enacrestic in your `$PATH`
++ enacrestic's env variables available.
+
+```snip
+export PATH=$PATH:/home/username/.local/bin
+. ~/.enacrestic/env.sh
+ ```
+
+
+# Init restic repo by hand
+
+```bash
+restic init --password-file  ~/.enacrestic/.pw
+```
+
+You're now ready to send your 1st backup.
+
+**This may take much time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
+
+
+# Run `ENACrestic`
+
++ from Ubuntu's Application launcher
++ or from command line with the single command `enacrestic`
+
+You'll see a new icon in the system tray (upper-right corner of your screen) with following icon.
+
+![just_launched](doc_pixmaps/just_launched.png)
+
+This is the indicator that ENACrestic is running in the background and it'll change over time, reflecting current state.
+
+By clicking on it, you can view detailed status and opt-in for the auto-start feature (start *ENACrestic* when Ubuntu user session is started).
+
+From now on, ENACrestic is running in the background and doing the backups on a regular basis.
+
+You can check it's activity by reading the `~/.enacrestic/last_backups.log` file.
+
+
+# What ENACrestic doesn't do
+
+ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use *restic* itself. Here are basics commands :
+
+### List the snapshots (backups)
+
+```bash
+restic snapshots -c --password-file  ~/.enacrestic/.pw
+```
+
+### Mount the backups ...
+
+... and be able to
++ browse the different snapshots
++ restore any files / folder
+
+```bash
+mkdir -p ~/mnt/my_backups
+restic mount ~/mnt/my_backups --password-file  ~/.enacrestic/.pw
+```
+
+Now you can browse `~/mnt/my_backups` folder and copy from it anything you want to restore. When done, you can simply *Ctrl-c* in the terminal where you run the `restic mount` command.
