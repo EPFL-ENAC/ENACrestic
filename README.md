@@ -23,6 +23,7 @@ This has been tested and validated on
 
 ```bash
 sudo apt install restic python3-pip qt5dxcb-plugin
+pip3 install --user --upgrade pip
 pip3 install --user ENACrestic
 ```
 
