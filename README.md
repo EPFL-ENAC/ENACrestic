@@ -121,7 +121,7 @@ You can check it's activity by reading the `~/.enacrestic/last_backups.log` file
 
 # What ENACrestic doesn't do
 
-ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use *restic* itself. Here are basics commands :
+ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use *restic* itself. Here are basic commands :
 
 ### List the snapshots (backups)
 
@@ -133,11 +133,11 @@ restic snapshots -c --password-file  ~/.enacrestic/.pw
 
 ... and be able to
 + browse the different snapshots
-+ restore any files / folder
++ restore any file / folder
 
 ```bash
 mkdir -p ~/mnt/my_backups
 restic mount ~/mnt/my_backups --password-file  ~/.enacrestic/.pw
 ```
 
-Now you can browse `~/mnt/my_backups` folder and copy from it anything you want to restore. When done, you can simply *Ctrl-c* in the terminal where you run the `restic mount` command.
+Now you can browse `~/mnt/my_backups` folder and copy from it anything you want to restore. When done, you can simply *Ctrl-c* in the terminal where you had issued the `restic mount ...` command.
