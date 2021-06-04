@@ -22,7 +22,7 @@ This has been tested and validated on
 + *Ubuntu 20.04 LTS*
 
 ```bash
-sudo apt install restic python3-pip
+sudo apt install restic python3-pip qt5dxcb-plugin
 pip3 install --user ENACrestic
 ```
 
