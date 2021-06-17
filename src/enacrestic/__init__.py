@@ -10,6 +10,8 @@ It uses the following files to be configured :
 
 + ~/.enacrestic/bkp_include
   This is given to --files-from option
++ ~/.enacrestic/bkp_exclude
+  This is given to --exclulde-file option
 + ~/.enacrestic/.pw
   This is given to --password-file option
 + ~/.enacrestic/env.sh
@@ -45,6 +47,7 @@ DEF_FORGET_EVERY_N_ITERATIONS = 10
 ENACRESTIC_PREF_FOLDER = os.path.expanduser('~/.enacrestic')
 RESTIC_USER_PREFS = {
     'FILESFROM': os.path.join(ENACRESTIC_PREF_FOLDER, 'bkp_include'),
+    'EXCLUDEFILES': os.path.join(ENACRESTIC_PREF_FOLDER, 'bkp_exclude'),
     'PASSWORDFILE': os.path.join(ENACRESTIC_PREF_FOLDER, '.pw'),
     'ENV': os.path.join(ENACRESTIC_PREF_FOLDER, 'env.sh'),
 }
@@ -503,6 +506,7 @@ class ResticBackup():
         args = [
             'backup',
             '--files-from', RESTIC_USER_PREFS['FILESFROM'],
+            '--exclude-file', RESTIC_USER_PREFS['EXCLUDEFILES'],
             '--password-file', RESTIC_USER_PREFS['PASSWORDFILE']
         ]
         self._run(cmd, args)
@@ -619,7 +623,8 @@ class QTEnacRestic(QApplication):
 
         self.tray_icon.setContextMenu(menu)
 
-        self.state.connect_to_gui(self.tray_icon, info_action, autostart_action)
+        self.state.connect_to_gui(
+            self.tray_icon, info_action, autostart_action)
         self.restic_backup = ResticBackup(self.state, self.logger)
         self.timer = QTimer()
         self.timer.timeout.connect(self.restic_backup.run)
