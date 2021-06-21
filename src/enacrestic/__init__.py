@@ -10,6 +10,8 @@ It uses the following files to be configured :
 
 + ~/.enacrestic/bkp_include
   This is given to --files-from option
++ ~/.enacrestic/bkp_exclude
+  This is given to --exclude-file option
 + ~/.enacrestic/.pw
   This is given to --password-file option
 + ~/.enacrestic/env.sh
@@ -48,6 +50,11 @@ RESTIC_USER_PREFS = {
     'PASSWORDFILE': os.path.join(ENACRESTIC_PREF_FOLDER, '.pw'),
     'ENV': os.path.join(ENACRESTIC_PREF_FOLDER, 'env.sh'),
 }
+
+if (os.path.isfile(os.path.join(ENACRESTIC_PREF_FOLDER, 'bkp_exclude'))):
+    RESTIC_USER_PREFS['EXCLUDEFILE'] = os.path.join(
+        ENACRESTIC_PREF_FOLDER, 'bkp_exclude')
+
 RESTIC_LOGFILE = os.path.join(ENACRESTIC_PREF_FOLDER, 'last_backups.log')
 RESTIC_STATEFILE = os.path.join(ENACRESTIC_PREF_FOLDER, 'state.json')
 RESTIC_AUTOSTART_FILE = os.path.expanduser(
@@ -505,6 +512,10 @@ class ResticBackup():
             '--files-from', RESTIC_USER_PREFS['FILESFROM'],
             '--password-file', RESTIC_USER_PREFS['PASSWORDFILE']
         ]
+
+        if 'EXCLUDEFILE' in RESTIC_USER_PREFS:
+            args = args + ['--exclude-file', RESTIC_USER_PREFS['EXCLUDEFILE']]
+
         self._run(cmd, args)
 
     def _run_forget(self):

@@ -79,6 +79,23 @@ Example for user `username` :
 
 note : Lines starting with a `#` are ignored.
 
+### Edit `~/.enacrestic/bkp_exclude` file
+
+Add one line per folder / file / file type that has to be excluded.
+
+Example for user `username` :
+
+```snip
+*.vtu
+*.pvtu
+*.msh
+/home/username/**/paraview
+/home/username/**/build*
+/home/username/**/CMakeFiles
+/home/username/**/debug*
+/home/username/**/results
+```
+
 ### Edit `~/.bashrc` or `~/.zshrc` (depending on your shell)
 
 Add the following 2 lines to have :
