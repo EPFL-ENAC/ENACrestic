@@ -8,6 +8,9 @@ PyQt5 = "*"
 python-pidfile = "*"
 
 [dev-packages]
+pylint = "*"
+ipykernel = "*"
+build = "*"
 
 [requires]
 python_version = "3.8"
