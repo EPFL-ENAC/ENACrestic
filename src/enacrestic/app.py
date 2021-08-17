@@ -399,11 +399,11 @@ class State():
                 f'Last backup failed, {_str_date(self.last_failed_datetime)}\n' \
                 f'see {RESTIC_LOGFILE} for details.'
         elif self.current_state == 'backup_no_network':
-            state_msg += 'Network timeout {_str_date(self.last_failed_datetime)}'
+            state_msg += f'Network timeout {_str_date(self.last_failed_datetime)}'
         if self.current_state.startswith('backup_in_progress'):
-            state_msg += 'Currently running a backup (started %s)' % _str_date(self.start_datetime)
+            state_msg += f'Currently running a backup (started {_str_date(self.start_datetime)})'
         elif self.current_state == 'forget_in_progress':
-            state_msg += 'Currently doing a cleanup (started %s)' % _str_date(self.start_datetime)
+            state_msg += f'Currently doing a cleanup (started {_str_date(self.start_datetime)})'
 
         # Add conditionnal stats on last backups and last cleanup
         last_chronos = _str_last_chronos('backup', self.prev_backup_chronos)
