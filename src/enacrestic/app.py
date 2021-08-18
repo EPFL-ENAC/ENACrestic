@@ -33,8 +33,10 @@ import pwd
 import time
 import json
 import getpass
+import requests
 import datetime
-from enacrestic.const import VERSION
+import webbrowser
+from enacrestic import const
 from pidfile import AlreadyRunningError, PIDFile
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
@@ -65,24 +67,42 @@ PID_FILE = f'/run/user/{UID}/enacrestic.pid'
 ICONS_FOLDER = os.path.abspath(f'{__file__}/../pixmaps')
 
 ICONS = {
-    'program_just_launched':
-        f'{ICONS_FOLDER}/just_launched.png',
-    'backup_in_pause':
-        f'{ICONS_FOLDER}/backup_in_pause.png',
-    'backup_success':
-        f'{ICONS_FOLDER}/backup_success.png',
-    'backup_failed':
-        f'{ICONS_FOLDER}/backup_failed.png',
-    'backup_no_network':
-        f'{ICONS_FOLDER}/backup_no_network.png',
-    'backup_in_progress':
-        f'{ICONS_FOLDER}/backup_in_progress.png',
-    'backup_in_progress_failed':
-        f'{ICONS_FOLDER}/backup_in_progress.png',
-    'backup_in_progress_no_network':
-        f'{ICONS_FOLDER}/backup_in_progress.png',
-    'forget_in_progress':
-        f'{ICONS_FOLDER}/forget_in_progress.png',
+    'program_just_launched': {
+        False: f'{ICONS_FOLDER}/just_launched.png',
+        True: f'{ICONS_FOLDER}/just_launched_badge.png',
+    },
+    'backup_in_pause': {
+        False: f'{ICONS_FOLDER}/backup_in_pause.png',
+        True: f'{ICONS_FOLDER}/backup_in_pause_badge.png',
+    },
+    'backup_success': {
+        False: f'{ICONS_FOLDER}/backup_success.png',
+        True: f'{ICONS_FOLDER}/backup_success_badge.png',
+    },
+    'backup_failed': {
+        False: f'{ICONS_FOLDER}/backup_failed.png',
+        True: f'{ICONS_FOLDER}/backup_failed_badge.png',
+    },
+    'backup_no_network': {
+        False: f'{ICONS_FOLDER}/backup_no_network.png',
+        True: f'{ICONS_FOLDER}/backup_no_network_badge.png',
+    },
+    'backup_in_progress': {
+        False: f'{ICONS_FOLDER}/backup_in_progress.png',
+        True: f'{ICONS_FOLDER}/backup_in_progress.png',
+    },
+    'backup_in_progress_failed': {
+        False: f'{ICONS_FOLDER}/backup_in_progress.png',
+        True: f'{ICONS_FOLDER}/backup_in_progress.png',
+    },
+    'backup_in_progress_no_network': {
+        False: f'{ICONS_FOLDER}/backup_in_progress.png',
+        True: f'{ICONS_FOLDER}/backup_in_progress.png',
+    },
+    'forget_in_progress': {
+        False: f'{ICONS_FOLDER}/forget_in_progress.png',
+        True: f'{ICONS_FOLDER}/forget_in_progress.png',
+    },
 }
 
 
@@ -97,12 +117,12 @@ class Logger():
     def __enter__(self):
         self.f_handler = open(RESTIC_LOGFILE, 'a')
         self.write_new_date_section()
-        self.write(f'Started ENACrestic {VERSION}\n')
+        self.write(f'Started ENACrestic {const.VERSION}\n')
         return self
 
     def __exit__(self, typ, value, traceback):
         self.write_new_date_section()
-        self.write(f'Stopped ENACrestic {VERSION}\n')
+        self.write(f'Stopped ENACrestic {const.VERSION}\n')
         self.f_handler.close()
 
     def write_new_date_section(self):
@@ -130,16 +150,19 @@ class State():
     DEF_NB_BACKUPS_BEFORE_FORGET = DEF_FORGET_EVERY_N_ITERATIONS
     NB_CHRONOS_TO_SAVE = 10
     DEF_AUTOSTART = False
+    DEF_LAST_CHECK_NEW_VERSION_DATETIME = datetime.datetime(year=1970, month=1, day=1, hour=0, minute=0, second=0)
 
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.tray_icon = None  # filled by connect_to_gui
         self.info_action = None  # filled by connect_to_gui
         self.autostart_action = None  # filled by connect_to_gui
         self.last_failed_datetime = None
 
-    def connect_to_gui(self, tray_icon, info_action, autostart_action):
+    def connect_to_gui(self, tray_icon, info_action, upgrade_action, autostart_action):
         self.tray_icon = tray_icon
         self.info_action = info_action
+        self.upgrade_action = upgrade_action
         self.autostart_action = autostart_action
         self.autostart_action.triggered.connect(self._toggle_autostart)
         self.autostart_action.setChecked(self.autostart)
@@ -179,6 +202,24 @@ class State():
                     'forget_every_n_iterations',
                     DEF_FORGET_EVERY_N_ITERATIONS
                 )
+                self.check_new_version_every_n_days = state_from_file.get(
+                    'check_new_version_every_n_days',
+                    const.CHECK_NEW_VERSION_EVERY_N_DAYS
+                )
+                try:
+                    self.last_check_new_version_datetime = datetime.datetime.strptime(
+                        state_from_file.get(
+                            'last_check_new_version_datetime',
+                            ''
+                        ),
+                        '%Y-%m-%d %H:%M:%S'
+                    )
+                except ValueError:
+                    self.last_check_new_version_datetime = State.DEF_LAST_CHECK_NEW_VERSION_DATETIME
+                self.latest_version_available = state_from_file.get(
+                    'latest_version_available',
+                    const.VERSION
+                )
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             self.current_state = State.DEF_START_STATE
             self.nb_backups_before_forget = State.DEF_NB_BACKUPS_BEFORE_FORGET
@@ -187,6 +228,11 @@ class State():
             self.autostart = State.DEF_AUTOSTART
             self.backup_every_n_minutes = DEF_BACKUP_EVERY_N_MINUTES
             self.forget_every_n_iterations = DEF_FORGET_EVERY_N_ITERATIONS
+            self.check_new_version_every_n_days = const.CHECK_NEW_VERSION_EVERY_N_DAYS
+            self.last_check_new_version_datetime = State.DEF_LAST_CHECK_NEW_VERSION_DATETIME
+            self.latest_version_available = const.VERSION
+
+        self.maybe_check_for_latest_version()
 
         self._update_icon()
         return self
@@ -205,8 +251,10 @@ class State():
                     'prev_forget_chronos': self.prev_forget_chronos,
                     'autostart': self.autostart,
                     'backup_every_n_minutes': self.backup_every_n_minutes,
-                    'forget_every_n_iterations':
-                        self.forget_every_n_iterations,
+                    'forget_every_n_iterations': self.forget_every_n_iterations,
+                    'check_new_version_every_n_days': self.check_new_version_every_n_days,
+                    'last_check_new_version_datetime': self.last_check_new_version_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    'latest_version_available': self.latest_version_available,
                 },
                 fh,
                 sort_keys=True,
@@ -304,8 +352,9 @@ class State():
 
     def _update_icon(self):
         '''
-        Update icon to current state
-        Update info_action with current state infos
+        + Update icon to current state
+        + Update info_action with current state infos
+        + Show upgrade_action if needed
         '''
 
         def _str_date(str_date):
@@ -381,9 +430,13 @@ class State():
         if self.tray_icon is None:
             return
 
-        self.tray_icon.setIcon(QIcon(ICONS[self.current_state]))
+        self.tray_icon.setIcon(
+            QIcon(
+                ICONS[self.current_state][self.version_need_upgrade()]
+            )
+        )
 
-        state_msg = f'ENACrestic {VERSION}\n\n'
+        state_msg = f'ENACrestic {const.VERSION}\n\n'
 
         if self.current_state == 'program_just_launched':
             state_msg += \
@@ -412,6 +465,9 @@ class State():
             state_msg += '\n'
             state_msg += last_chronos
         self.info_action.setText(state_msg)
+
+        # show / hide upgrade_action
+        self.upgrade_action.setVisible(self.version_need_upgrade())
 
     def _toggle_autostart(self):
         '''Save and apply user's choice to autostart or not'''
@@ -446,6 +502,58 @@ X-GNOME-Autostart-enabled=true
             except FileNotFoundError:
                 pass
 
+
+    def maybe_check_for_latest_version(self):
+        '''
+        This will call check_for_latest_version if enough time has passed since last check
+        '''
+        next_check_datetime = (
+            self.last_check_new_version_datetime
+            + datetime.timedelta(days=self.check_new_version_every_n_days)
+        )
+        if datetime.datetime.now() > next_check_datetime:
+            self.check_for_latest_version()
+            self._update_icon()
+
+
+    def check_for_latest_version(self):
+        '''
+        + Check for latest version on PYPI and store it in self.latest_version_available (as str)
+        + Update self.last_check_new_version_datetime with curent datetime
+        + It writes info to logger about it.
+        '''
+        try:
+            self.logger.write_new_date_section()
+            self.logger.write('Checking for latest release')
+            pypi_response = requests.get(const.PYPI_PROJECT_URL)
+            pypi_json = pypi_response.json()
+            self.latest_version_available = pypi_json['info']['version']
+            if self.version_need_upgrade():
+                self.logger.write(f'new release available : {self.latest_version_available}')
+            else:
+                self.logger.write('ok')
+            self.last_check_new_version_datetime = datetime.datetime.now()
+        except ConnectionError:
+            self.logger.error(
+                'Could not retrieve latest release number. '
+                'Considering it\'s fine.'
+            )
+            self.latest_version_available = const.VERSION
+
+    def version_need_upgrade(self):
+        '''
+        return bool if new version > current version
+        '''
+        def try_to_int(string):
+            try:
+                return int(string)
+            except ValueError:
+                return string
+
+        latest_version_info = tuple(
+            try_to_int(ver) for ver in self.latest_version_available.split('.')
+        )
+        return latest_version_info > const.VERSION_INFO
 
 class ResticBackup():
     '''
@@ -601,7 +709,7 @@ class QTEnacRestic(QApplication):
 
     def _start_when_systray_available(self):
         self.tray_icon = QSystemTrayIcon(
-            QIcon(ICONS['program_just_launched']),
+            QIcon(ICONS['program_just_launched'][False]),
             parent=self
         )
         self.tray_icon.show()
@@ -609,6 +717,11 @@ class QTEnacRestic(QApplication):
         menu = QMenu()
         # Entry to display informations to the user
         info_action = menu.addAction('ENACrestic launched')
+
+        # Entry to display informations when an upgrade is available
+        upgrade_action = menu.addAction('New version is available.\nClick here to read the upgrade instructions.')
+        upgrade_action.triggered.connect(self.open_upgrade_instructions)
+        upgrade_action.setVisible(False)
 
         menu.addSection('Actions')
 
@@ -623,11 +736,19 @@ class QTEnacRestic(QApplication):
 
         self.tray_icon.setContextMenu(menu)
 
-        self.state.connect_to_gui(self.tray_icon, info_action, autostart_action)
+        self.state.connect_to_gui(self.tray_icon, info_action, upgrade_action, autostart_action)
         self.restic_backup = ResticBackup(self.state, self.logger)
         self.timer = QTimer()
         self.timer.timeout.connect(self.restic_backup.run)
         self.timer.start(self.state.backup_every_n_minutes * 60_000)
+
+        self.check_for_latest_version_timer = QTimer()
+        self.check_for_latest_version_timer.timeout.connect(self.state.maybe_check_for_latest_version)
+        self.check_for_latest_version_timer.start(86_400_000)  # every hour
+
+
+    def open_upgrade_instructions(self):
+        webbrowser.open(const.UPGRADE_DOC)
 
 
 def main():
@@ -638,7 +759,7 @@ def main():
     with Logger() as logger:
         try:
             with PIDFile(PID_FILE):
-                with State() as state:
+                with State(logger) as state:
                     app = QTEnacRestic(sys.argv, logger, state)
                     sys.exit(app.exec_())
         except AlreadyRunningError:

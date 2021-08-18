@@ -28,6 +28,15 @@ pip3 install --user ENACrestic
 ```
 
 
+# Upgrade
+
+To upgrade ENACrestic to latest release, just run the following command :
+
+```bash
+pip3 install --user --upgrade ENACrestic
+```
+
+
 # Config ENACrestic
 
 ```bash
