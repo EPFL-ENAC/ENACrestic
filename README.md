@@ -70,7 +70,7 @@ Add a one line password in it. This is used to encrypt your backups.
 
 Add one line per folder / file that has to be backed up.
 
-Example for user `username` :
+**Example 1** - list every important folder :
 
 ```snip
 /home/username/.enacrestic/
@@ -86,7 +86,38 @@ Example for user `username` :
 /home/username/Videos/
 ```
 
+**Example 2** - backup all my home directory (and probably exclude some things just after) :
+
+```snip
+/home/username/
+```
+
 note : Lines starting with a `#` are ignored.
+
+### Edit `~/.enacrestic/bkp_exclude` file (optional)
+
+Add one line per folder / file / expression that has to be excluded.
+
+Before running your first backup, you might want to exclude heavy and unnecessary folders (Like the Downloads or the Trash). You can use the `baobab` utility to find those.
+
+Here is an example of some typical things you might want to exclude from backup :
+
+```snip
+*.iso
+/home/username/Downloads/
+/home/username/.local/share/Trash/
+/home/username/VirtualBox VMs/
+/home/username/snap/
+/home/username/.cache/
+/home/username/**/nobackup*
+/home/username/.local/share/virtualenvs/
+/home/username/.arduino15/
+/home/username/.atom/
+/home/username/.npm/
+/home/username/.nvm/
+```
+
+Exact syntax is described [here](https://restic.readthedocs.io/en/latest/040_backup.html#excluding-files)
 
 ### Edit `~/.bashrc` or `~/.zshrc` (depending on your shell)
 

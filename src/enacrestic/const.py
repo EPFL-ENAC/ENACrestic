@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-VERSION_INFO = (0, 1, 6)
+VERSION_INFO = (0, 1, 7)
 VERSION = '.'.join([str(num) for num in VERSION_INFO])
 
 PYPI_PROJECT_URL = 'https://pypi.org/pypi/ENACrestic/json'
