@@ -536,7 +536,9 @@ X-GNOME-Autostart-enabled=true
             else:
                 self.logger.write('ok')
             self.last_check_new_version_datetime = datetime.datetime.now()
-        except ConnectionError:
+        except (requests.exceptions.ConnectionError,
+                json.decoder.JSONDecodeError,
+                KeyError):
             self.logger.error(
                 'Could not retrieve latest release number. '
                 'Considering it\'s fine.'
