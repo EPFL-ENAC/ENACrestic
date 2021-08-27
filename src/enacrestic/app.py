@@ -671,12 +671,13 @@ class ResticBackup():
             self.current_chrono = time.time() - self.current_time_starting
 
     def _process_finished(self):
+        exitCode = self.p.exitCode()
         self.logger.write(
-            f'Process finished in '
+            f'Process finished ({exitCode}) in '
             f'{self.current_chrono:.3f} seconds.\n')
         next_action = ''
         if self.p.exitStatus() == QProcess.NormalExit:
-            if self.p.exitCode() == 0:
+            if exitCode == 0:
                 next_action = self.state.finished_restic_cmd(
                     'ok', self.current_chrono
                 )
