@@ -4,29 +4,28 @@
 
 A simple Qt GUI to automate backups with [restic](https://restic.net/)
 
-1. Automate your *restic* backups at a choosen frequency
-2. Run *restic forget* in a regular basis (and transparently) to keep your backup light and useful
+1. Automate your _restic_ backups at a choosen frequency
+2. Run _restic forget_ in a regular basis (and transparently) to keep your backup light and useful
 3. Let you see when :
-  + ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
-  + ![forget_in_progress](doc_pixmaps/forget_in_progress.png) `restic forget` is running
-  + ![backup_success](doc_pixmaps/backup_success.png) backup is completed
-  + ![backup_failed](doc_pixmaps/backup_failed.png) last backup failed
-  + ![backup_no_network](doc_pixmaps/backup_no_network.png) last backup failed because of a network timeout (maybe the VPN is not running?)
 
+- ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
+- ![forget_in_progress](doc_pixmaps/forget_in_progress.png) `restic forget` is running
+- ![backup_success](doc_pixmaps/backup_success.png) backup is completed
+- ![backup_failed](doc_pixmaps/backup_failed.png) last backup failed
+- ![backup_no_network](doc_pixmaps/backup_no_network.png) last backup failed because of a network timeout (maybe the VPN is not running?)
 
 # Installation
 
 This has been tested and validated on
 
-+ *Ubuntu 18.04 LTS*
-+ *Ubuntu 20.04 LTS*
+- _Ubuntu 18.04 LTS_
+- _Ubuntu 20.04 LTS_
 
 ```bash
 sudo apt install restic python3-pip qt5dxcb-plugin
 pip3 install --user --upgrade pip
 pip3 install --user ENACrestic
 ```
-
 
 # Upgrade
 
@@ -36,16 +35,22 @@ To upgrade ENACrestic to latest release, just run the following command :
 pip3 install --user --upgrade ENACrestic
 ```
 
-
 # Config ENACrestic
+
+Note: For this documentation, we have chosen to use the `vi` text editor.
+Adapt the commands below by replacing it with the editor of your choice. (`nano`, `gedit`, ...)
 
 ```bash
 mkdir ~/.enacrestic
 ```
 
-### Edit `~/.enacrestic/env.sh` file
+### Write environment setup file
 
 Choose the right section according to your destination storage
+
+```bash
+vi ~/.enacrestic/env.sh
+```
 
 ```snip
 # Local (not recommended!)
@@ -60,15 +65,23 @@ export AWS_ACCESS_KEY_ID=TheBucketRWAccessKey
 export AWS_SECRET_ACCESS_KEY=TheBucketRWSecretKey
 ```
 
-### Edit `~/.enacrestic/.pw` file
+### Write password file
 
 Add a one line password in it. This is used to encrypt your backups.
 
+```bash
+vi ~/.enacrestic/.pw
+```
+
 **Be careful !** If you loose this password ... you loose your backups.
 
-### Edit `~/.enacrestic/bkp_include` file
+### Write include list file
 
 Add one line per folder / file that has to be backed up.
+
+```bash
+vi ~/.enacrestic/bkp_include
+```
 
 **Example 1** - list every important folder :
 
@@ -94,7 +107,7 @@ Add one line per folder / file that has to be backed up.
 
 note : Lines starting with a `#` are ignored.
 
-### Edit `~/.enacrestic/bkp_exclude` file (optional)
+### Write exclude list file (optional)
 
 Add one line per folder / file / expression that has to be excluded.
 
@@ -102,9 +115,14 @@ Before running your first backup, you might want to exclude heavy and unnecessar
 
 Here is an example of some typical things you might want to exclude from backup :
 
+```bash
+vi ~/.enacrestic/bkp_exclude
+```
+
 ```snip
 *.iso
 /home/username/Downloads/
+/home/username/ENACdrives/
 /home/username/.local/share/Trash/
 /home/username/VirtualBox VMs/
 /home/username/snap/
@@ -119,17 +137,27 @@ Here is an example of some typical things you might want to exclude from backup 
 
 Exact syntax is described [here](https://restic.readthedocs.io/en/latest/040_backup.html#excluding-files)
 
-### Edit `~/.bashrc` or `~/.zshrc` (depending on your shell)
+### Make it available to your shell
 
 Add the following 2 lines to have :
-+ enacrestic in your `$PATH`
-+ enacrestic's env variables available.
+
+- enacrestic in your `$PATH`
+- enacrestic's env variables available.
+
+```bash
+vi ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
+```
 
 ```snip
 export PATH=$PATH:/home/username/.local/bin
 . ~/.enacrestic/env.sh
- ```
+```
 
+Now close + open a new terminal to get it all into your environment ... or simply reload your rc file :
+
+```bash
+. ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
+```
 
 # Init restic repo by hand
 
@@ -137,15 +165,12 @@ export PATH=$PATH:/home/username/.local/bin
 restic init --password-file  ~/.enacrestic/.pw
 ```
 
-You're now ready to send your 1st backup.
-
-**This may take much time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
-
+🎉 Setup is now complete! You're now ready to send your 1st backup. 🎉
 
 # Run `ENACrestic`
 
-+ from Ubuntu's Application launcher
-+ or from command line with the single command `enacrestic`
+- from Ubuntu's Application launcher
+- or from command line with the single command `enacrestic`
 
 You'll see a new icon in the system tray (upper-right corner of your screen) with following icon.
 
@@ -153,16 +178,17 @@ You'll see a new icon in the system tray (upper-right corner of your screen) wit
 
 This is the indicator that ENACrestic is running in the background and it'll change over time, reflecting current state.
 
-By clicking on it, you can view detailed status and opt-in for the auto-start feature (start *ENACrestic* when Ubuntu user session is started).
+By clicking on it, you can view detailed status and opt-in for the auto-start feature (start _ENACrestic_ when Ubuntu user session is started).
 
 From now on, ENACrestic is running in the background and doing the backups on a regular basis.
 
 You can check it's activity by reading the `~/.enacrestic/last_backups.log` file.
 
+Note : **First backup can take a long time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
 
 # What ENACrestic doesn't do
 
-ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use *restic* itself. Here are basic commands :
+ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use _restic_ itself. Here are basic commands :
 
 ### List the snapshots (backups)
 
@@ -173,12 +199,13 @@ restic snapshots -c --password-file  ~/.enacrestic/.pw
 ### Mount the backups ...
 
 ... and be able to
-+ browse the different snapshots
-+ restore any file / folder
+
+- browse the different snapshots
+- restore any file / folder
 
 ```bash
 mkdir -p ~/mnt/my_backups
 restic mount ~/mnt/my_backups --password-file  ~/.enacrestic/.pw
 ```
 
-Now you can browse `~/mnt/my_backups` folder and copy from it anything you want to restore. When done, you can simply *Ctrl-c* in the terminal where you had issued the `restic mount ...` command.
+Now you can browse `~/mnt/my_backups` folder and copy from it anything you want to restore. When done, you can simply _Ctrl-c_ in the terminal where you had issued the `restic mount ...` command.
