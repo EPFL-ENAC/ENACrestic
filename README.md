@@ -121,6 +121,18 @@ vi ~/.enacrestic/bkp_exclude
 
 ```snip
 *.iso
+*.sav
+*.bak
+*.bak2
+*.log
+*.ost
+*.part
+*.temp
+*.tmp
+*.vhd
+*.vhdx
+*.vmdk
+*.vdi
 /home/username/Downloads/
 /home/username/ENACdrives/
 /home/username/.local/share/Trash/
