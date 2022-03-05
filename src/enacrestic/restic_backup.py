@@ -130,20 +130,23 @@ class ResticBackup:
 
     def _process_finished(self):
         exitCode = self.p.exitCode()
-        self.logger.write(
-            f"Process finished ({exitCode}) in " f"{self.current_chrono:.3f} seconds.\n"
-        )
-        next_action = ""
         if self.p.exitStatus() == QProcess.NormalExit:
             if exitCode == 0:
-                next_action = self.state.finished_restic_cmd("ok", self.current_chrono)
+                completion_status = "ok"
             else:
                 if self.current_error == "timeout":
-                    self.state.finished_restic_cmd("no network", self.current_chrono)
+                    completion_status = "no network"
                 else:
-                    self.state.finished_restic_cmd("failed", self.current_chrono)
+                    completion_status = "failed"
         else:
-            self.state.finished_restic_cmd("failed", self.current_chrono)
+            completion_status = "failed"
+        next_action = self.state.finished_restic_cmd(
+            completion_status, self.current_chrono
+        )
+        self.logger.write(
+            f"Process finished ({exitCode}) in "
+            f"{self.current_chrono:.3f} seconds with status: '{completion_status}'\n"
+        )
 
         self.p = None
         if next_action == "run forget":
