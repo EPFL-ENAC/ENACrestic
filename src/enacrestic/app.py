@@ -31,10 +31,8 @@ It writes to the following files :
 import os
 import re
 import sys
-import pwd
 import time
 import json
-import getpass
 import requests
 import datetime
 import webbrowser
@@ -43,68 +41,6 @@ from pidfile import AlreadyRunningError, PIDFile
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, QProcess, QProcessEnvironment
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
-
-
-DEF_BACKUP_EVERY_N_MINUTES = 30
-DEF_FORGET_EVERY_N_ITERATIONS = 10
-
-ENACRESTIC_PREF_FOLDER = os.path.expanduser("~/.enacrestic")
-RESTIC_USER_PREFS = {
-    "FILESFROM": os.path.join(ENACRESTIC_PREF_FOLDER, "bkp_include"),
-    "EXCLUDEFILE": os.path.join(ENACRESTIC_PREF_FOLDER, "bkp_exclude"),
-    "PASSWORDFILE": os.path.join(ENACRESTIC_PREF_FOLDER, ".pw"),
-    "ENV": os.path.join(ENACRESTIC_PREF_FOLDER, "env.sh"),
-}
-RESTIC_LOGFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "last_backups.log")
-RESTIC_STATEFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "state.json")
-RESTIC_AUTOSTART_FILE = os.path.expanduser("~/.config/autostart/enacrestic.desktop")
-
-ENACRESTIC_BIN = os.path.abspath(sys.argv[0])
-
-USERNAME = getpass.getuser()
-UID = pwd.getpwnam(USERNAME).pw_uid
-PID_FILE = f"/run/user/{UID}/enacrestic.pid"
-
-ICONS_FOLDER = os.path.abspath(f"{__file__}/../pixmaps")
-
-ICONS = {
-    "program_just_launched": {
-        False: f"{ICONS_FOLDER}/just_launched.png",
-        True: f"{ICONS_FOLDER}/just_launched_badge.png",
-    },
-    "backup_in_pause": {
-        False: f"{ICONS_FOLDER}/backup_in_pause.png",
-        True: f"{ICONS_FOLDER}/backup_in_pause_badge.png",
-    },
-    "backup_success": {
-        False: f"{ICONS_FOLDER}/backup_success.png",
-        True: f"{ICONS_FOLDER}/backup_success_badge.png",
-    },
-    "backup_failed": {
-        False: f"{ICONS_FOLDER}/backup_failed.png",
-        True: f"{ICONS_FOLDER}/backup_failed_badge.png",
-    },
-    "backup_no_network": {
-        False: f"{ICONS_FOLDER}/backup_no_network.png",
-        True: f"{ICONS_FOLDER}/backup_no_network_badge.png",
-    },
-    "backup_in_progress": {
-        False: f"{ICONS_FOLDER}/backup_in_progress.png",
-        True: f"{ICONS_FOLDER}/backup_in_progress.png",
-    },
-    "backup_in_progress_failed": {
-        False: f"{ICONS_FOLDER}/backup_in_progress.png",
-        True: f"{ICONS_FOLDER}/backup_in_progress.png",
-    },
-    "backup_in_progress_no_network": {
-        False: f"{ICONS_FOLDER}/backup_in_progress.png",
-        True: f"{ICONS_FOLDER}/backup_in_progress.png",
-    },
-    "forget_in_progress": {
-        False: f"{ICONS_FOLDER}/forget_in_progress.png",
-        True: f"{ICONS_FOLDER}/forget_in_progress.png",
-    },
-}
 
 
 class Logger:
@@ -116,7 +52,7 @@ class Logger:
         pass
 
     def __enter__(self):
-        self.f_handler = open(RESTIC_LOGFILE, "a")
+        self.f_handler = open(const.RESTIC_LOGFILE, "a")
         self.write_new_date_section()
         self.write(f"Started ENACrestic {const.VERSION}\n")
         return self
@@ -148,7 +84,7 @@ class State:
     """
 
     DEF_START_STATE = "program_just_launched"
-    DEF_NB_BACKUPS_BEFORE_FORGET = DEF_FORGET_EVERY_N_ITERATIONS
+    DEF_NB_BACKUPS_BEFORE_FORGET = const.DEF_FORGET_EVERY_N_ITERATIONS
     NB_CHRONOS_TO_SAVE = 10
     DEF_AUTOSTART = False
     DEF_LAST_CHECK_NEW_VERSION_DATETIME = datetime.datetime(
@@ -173,7 +109,7 @@ class State:
 
     def __enter__(self):
         try:
-            with open(RESTIC_STATEFILE) as fh:
+            with open(const.RESTIC_STATEFILE) as fh:
                 state_from_file = json.load(fh)
                 self.current_state = state_from_file.get(
                     "current_state", State.DEF_START_STATE
@@ -191,10 +127,10 @@ class State:
                 )
                 self.autostart = state_from_file.get("autostart", State.DEF_AUTOSTART)
                 self.backup_every_n_minutes = state_from_file.get(
-                    "backup_every_n_minutes", DEF_BACKUP_EVERY_N_MINUTES
+                    "backup_every_n_minutes", const.DEF_BACKUP_EVERY_N_MINUTES
                 )
                 self.forget_every_n_iterations = state_from_file.get(
-                    "forget_every_n_iterations", DEF_FORGET_EVERY_N_ITERATIONS
+                    "forget_every_n_iterations", const.DEF_FORGET_EVERY_N_ITERATIONS
                 )
                 self.check_new_version_every_n_days = state_from_file.get(
                     "check_new_version_every_n_days",
@@ -218,8 +154,8 @@ class State:
             self.prev_backup_chronos = []
             self.prev_forget_chronos = []
             self.autostart = State.DEF_AUTOSTART
-            self.backup_every_n_minutes = DEF_BACKUP_EVERY_N_MINUTES
-            self.forget_every_n_iterations = DEF_FORGET_EVERY_N_ITERATIONS
+            self.backup_every_n_minutes = const.DEF_BACKUP_EVERY_N_MINUTES
+            self.forget_every_n_iterations = const.DEF_FORGET_EVERY_N_ITERATIONS
             self.check_new_version_every_n_days = const.CHECK_NEW_VERSION_EVERY_N_DAYS
             self.last_check_new_version_datetime = (
                 State.DEF_LAST_CHECK_NEW_VERSION_DATETIME
@@ -237,7 +173,7 @@ class State:
             self.last_failed_datetime = datetime.datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
-        with open(RESTIC_STATEFILE, "w") as fh:
+        with open(const.RESTIC_STATEFILE, "w") as fh:
             json.dump(
                 {
                     "current_state": self.current_state,
@@ -428,7 +364,7 @@ class State:
             return
 
         self.tray_icon.setIcon(
-            QIcon(ICONS[self.current_state][self.version_need_upgrade()])
+            QIcon(const.ICONS[self.current_state][self.version_need_upgrade()])
         )
 
         state_msg = f"ENACrestic {const.VERSION}\n\n"
@@ -446,7 +382,7 @@ class State:
         elif self.current_state == "backup_failed":
             state_msg += (
                 f"Last backup failed, {_str_date(self.last_failed_datetime)}\n"
-                f"see {RESTIC_LOGFILE} for details."
+                f"see {const.RESTIC_LOGFILE} for details."
             )
         elif self.current_state == "backup_no_network":
             state_msg += f"Network timeout {_str_date(self.last_failed_datetime)}"
@@ -479,15 +415,15 @@ class State:
         self.autostart = self.autostart_action.isChecked()
         if self.autostart:
             # Want the app to autostart with user's session
-            autostart_folder = os.path.dirname(RESTIC_AUTOSTART_FILE)
+            autostart_folder = os.path.dirname(const.RESTIC_AUTOSTART_FILE)
             os.makedirs(autostart_folder, exist_ok=True)
-            with open(RESTIC_AUTOSTART_FILE, "w") as f:
+            with open(const.RESTIC_AUTOSTART_FILE, "w") as f:
                 f.write(
                     f"""\
 [Desktop Entry]
 Name=ENACrestic
 Comment=Automated Backup with restic
-Exec={ENACRESTIC_BIN}
+Exec={const.ENACRESTIC_BIN}
 Icon=enacrestic
 Terminal=false
 Type=Application
@@ -501,7 +437,7 @@ X-GNOME-Autostart-enabled=true
         else:
             # Users doesn't want ENACrestic to autostart
             try:
-                os.remove(RESTIC_AUTOSTART_FILE)
+                os.remove(const.RESTIC_AUTOSTART_FILE)
             except FileNotFoundError:
                 pass
 
@@ -596,7 +532,7 @@ class ResticBackup:
             r"AWS_SECRET_ACCESS_KEY",
         ]
         try:
-            with open(RESTIC_USER_PREFS["ENV"], "r") as f:
+            with open(const.RESTIC_USER_PREFS["ENV"], "r") as f:
                 for line in f.readlines():
                     # remove comments
                     # A) starting with #
@@ -612,7 +548,7 @@ class ResticBackup:
             pass
         if not self.env.contains("RESTIC_REPOSITORY"):
             self.logger.write(
-                f'Warning: {RESTIC_USER_PREFS["ENV"]} '
+                f'Warning: {const.RESTIC_USER_PREFS["ENV"]} '
                 f"seems not configured correctly"
             )
 
@@ -623,12 +559,12 @@ class ResticBackup:
         args = [
             "backup",
             "--files-from",
-            RESTIC_USER_PREFS["FILESFROM"],
+            const.RESTIC_USER_PREFS["FILESFROM"],
             "--password-file",
-            RESTIC_USER_PREFS["PASSWORDFILE"],
+            const.RESTIC_USER_PREFS["PASSWORDFILE"],
         ]
-        if os.path.isfile(RESTIC_USER_PREFS["EXCLUDEFILE"]):
-            args += ["--exclude-file", RESTIC_USER_PREFS["EXCLUDEFILE"]]
+        if os.path.isfile(const.RESTIC_USER_PREFS["EXCLUDEFILE"]):
+            args += ["--exclude-file", const.RESTIC_USER_PREFS["EXCLUDEFILE"]]
         self._run(cmd, args)
 
     def _run_forget(self):
@@ -642,7 +578,7 @@ class ResticBackup:
             "host",
             "-c",
             "--password-file",
-            RESTIC_USER_PREFS["PASSWORDFILE"],
+            const.RESTIC_USER_PREFS["PASSWORDFILE"],
             "--keep-last",
             "3",
             "--keep-hourly",
@@ -722,7 +658,7 @@ class QTEnacRestic(QApplication):
 
     def _start_when_systray_available(self):
         self.tray_icon = QSystemTrayIcon(
-            QIcon(ICONS["program_just_launched"][False]), parent=self
+            QIcon(const.ICONS["program_just_launched"][False]), parent=self
         )
         self.tray_icon.show()
 
@@ -770,12 +706,12 @@ class QTEnacRestic(QApplication):
 
 def main():
     # Create pref folder if doesn't exist yet
-    if not os.path.exists(ENACRESTIC_PREF_FOLDER):
-        os.makedirs(ENACRESTIC_PREF_FOLDER)
+    if not os.path.exists(const.ENACRESTIC_PREF_FOLDER):
+        os.makedirs(const.ENACRESTIC_PREF_FOLDER)
 
     with Logger() as logger:
         try:
-            with PIDFile(PID_FILE):
+            with PIDFile(const.PID_FILE):
                 with State(logger) as state:
                     app = QTEnacRestic(sys.argv, logger, state)
                     sys.exit(app.exec_())
