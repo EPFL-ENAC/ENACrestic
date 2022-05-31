@@ -20,6 +20,7 @@ This has been tested and validated on
 
 - _Ubuntu 18.04 LTS_
 - _Ubuntu 20.04 LTS_
+- _Ubuntu 22.04 LTS_
 
 ```bash
 sudo apt install restic python3-pip qt5dxcb-plugin
