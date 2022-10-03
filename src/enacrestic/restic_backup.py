@@ -4,7 +4,9 @@ Manages the execution of restic command
 import os
 import re
 import time
+
 from PyQt5.QtCore import QProcess, QProcessEnvironment
+
 from enacrestic import const
 
 
