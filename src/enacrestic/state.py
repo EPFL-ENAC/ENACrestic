@@ -5,7 +5,7 @@ import os
 import requests
 from PyQt5.QtGui import QIcon
 
-from enacrestic import const
+from enacrestic import __version__, const
 
 """
 Stores the state of the application
@@ -78,7 +78,7 @@ class State:
                         State.DEF_LAST_CHECK_NEW_VERSION_DATETIME
                     )
                 self.latest_version_available = state_from_file.get(
-                    "latest_version_available", const.VERSION
+                    "latest_version_available", __version__
                 )
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             self.current_state = State.DEF_START_STATE
@@ -92,7 +92,7 @@ class State:
             self.last_check_new_version_datetime = (
                 State.DEF_LAST_CHECK_NEW_VERSION_DATETIME
             )
-            self.latest_version_available = const.VERSION
+            self.latest_version_available = __version__
 
         self.maybe_check_for_latest_version()
 
@@ -299,7 +299,7 @@ class State:
             QIcon(const.ICONS[self.current_state][self.version_need_upgrade()])
         )
 
-        state_msg = f"ENACrestic {const.VERSION}\n\n"
+        state_msg = f"ENACrestic {__version__}\n\n"
 
         if self.current_state == "program_just_launched":
             state_msg += (
@@ -411,7 +411,7 @@ X-GNOME-Autostart-enabled=true
             self.logger.error(
                 "Could not retrieve latest release number. " "Considering it's fine."
             )
-            self.latest_version_available = const.VERSION
+            self.latest_version_available = __version__
 
     def version_need_upgrade(self):
         """

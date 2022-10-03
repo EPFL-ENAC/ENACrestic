@@ -5,9 +5,10 @@ import os
 import pwd
 import sys
 
+from enacrestic import __version__
+
 # Package related
-VERSION_INFO = (0, 1, 10)
-VERSION = ".".join([str(num) for num in VERSION_INFO])
+VERSION_INFO = tuple(map(lambda x: int(x), __version__.split(".")))
 
 PYPI_PROJECT_URL = "https://pypi.org/pypi/ENACrestic/json"
 UPGRADE_DOC = "https://github.com/EPFL-ENAC/ENACrestic#upgrade"
