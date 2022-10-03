@@ -17,12 +17,12 @@ here = pathlib.Path(__file__).parent.resolve()
 
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
-VERSION = "is set by `exec` command here bellow"
-exec((here / "src/enacrestic/const.py").read_text(encoding="utf-8"))
+__version__ = "is set by `exec` command here bellow"
+exec((here / "src/enacrestic/__init__.py").read_text(encoding="utf-8"))
 
 setup(
     name="ENACrestic",
-    version=VERSION,
+    version=__version__,
     description="Automate backups using restic",
     long_description=long_description,
     long_description_content_type="text/markdown",
