@@ -13,7 +13,7 @@ import logging
 import os
 from logging.handlers import TimedRotatingFileHandler
 
-from enacrestic import const
+from enacrestic import __version__, const
 
 
 class Logger:
@@ -41,12 +41,12 @@ class Logger:
 
     def __enter__(self):
         self.write_new_date_section()
-        self.write(f"Started ENACrestic {const.VERSION}\n")
+        self.write(f"Started ENACrestic {__version__}\n")
         return self
 
     def __exit__(self, typ, value, traceback):
         self.write_new_date_section()
-        self.write(f"Stopped ENACrestic {const.VERSION}\n")
+        self.write(f"Stopped ENACrestic {__version__}\n")
 
     def write_new_date_section(self):
         message = "-" * 50 + f"\n{datetime.datetime.now()}"

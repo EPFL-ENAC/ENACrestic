@@ -1,7 +1,7 @@
 # Dev
 
 1. `poetry install`
-2. run with `poetry run python3 src/enacrestic/__init__.py`
+2. run with `poetry run python3 src/enacrestic/main.py`
 3. manually run pre-commit hooks : `poetry run pre-commit run -a`
 
 # Release
