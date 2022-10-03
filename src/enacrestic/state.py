@@ -1,9 +1,11 @@
-import os
-import json
 import datetime
+import json
+import os
+
 import requests
-from enacrestic import const
 from PyQt5.QtGui import QIcon
+
+from enacrestic import const
 
 """
 Stores the state of the application

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-import pwd
 import getpass
+import os
+import pwd
+import sys
 
 # Package related
 VERSION_INFO = (0, 1, 10)

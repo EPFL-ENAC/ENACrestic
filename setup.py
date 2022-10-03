@@ -9,8 +9,9 @@ Build it with :
 $ python3 -m build
 """
 
-from setuptools import setup
 import pathlib
+
+from setuptools import setup
 
 here = pathlib.Path(__file__).parent.resolve()
 

@@ -7,11 +7,12 @@ with auto log rotation (gz)
 """
 
 
-import os
+import datetime
 import gzip
 import logging
+import os
 from logging.handlers import TimedRotatingFileHandler
-import datetime
+
 from enacrestic import const
 
 

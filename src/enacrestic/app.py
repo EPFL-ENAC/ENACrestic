@@ -31,14 +31,16 @@ It writes to the following files :
 import os
 import sys
 import webbrowser
+
+from pidfile import AlreadyRunningError, PIDFile
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction, QApplication, QMenu, QSystemTrayIcon
+
 from enacrestic import const
 from enacrestic.logger import Logger
-from enacrestic.state import State
 from enacrestic.restic_backup import ResticBackup
-from pidfile import AlreadyRunningError, PIDFile
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from enacrestic.state import State
 
 
 class QTEnacRestic(QApplication):
