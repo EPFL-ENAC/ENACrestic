@@ -6,7 +6,7 @@ import pwd
 import getpass
 
 # Package related
-VERSION_INFO = (0, 1, 9)
+VERSION_INFO = (0, 1, 10)
 VERSION = ".".join([str(num) for num in VERSION_INFO])
 
 PYPI_PROJECT_URL = "https://pypi.org/pypi/ENACrestic/json"
@@ -28,6 +28,9 @@ RESTIC_USER_PREFS = {
 RESTIC_LOGFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "last_backups.log")
 RESTIC_STATEFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "state.json")
 RESTIC_AUTOSTART_FILE = os.path.expanduser("~/.config/autostart/enacrestic.desktop")
+
+LOGFILE_ROTATION_EVERY_N_DAYS = 30
+LOGFILE_ROTATION_BACKUP_COUNT = 5
 
 ENACRESTIC_BIN = os.path.abspath(sys.argv[0])
 
