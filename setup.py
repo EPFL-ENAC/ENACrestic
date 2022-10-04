@@ -40,7 +40,7 @@ setup(
         "Topic :: System :: Archiving :: Backup",
     ],
     keywords="backup, restic",
-    package_dir={"": "src"},
+    package_dir={"": "."},
     packages=["enacrestic"],
     python_requires=">=3.6, <4",
     install_requires=[
