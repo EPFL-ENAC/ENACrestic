@@ -6,5 +6,6 @@
   },
   "scripts": {
     "prepare": "husky install"
-  }
+  },
+  "version": "0.2.0"
 }
