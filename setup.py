@@ -13,16 +13,14 @@ import pathlib
 
 from setuptools import setup
 
-from enacrestic import __version__
-
 here = pathlib.Path(__file__).parent.resolve()
 
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 
 setup(
-    name="ENACrestic",
-    version=__version__,
+    name="enacrestic",
+    version="0.1.10",
     description="Automate backups using restic",
     long_description=long_description,
     long_description_content_type="text/markdown",
