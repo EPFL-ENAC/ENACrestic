@@ -5,7 +5,8 @@
       "bump-minor-pre-major": false,
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
-      "prerelease": false
+      "prerelease": false,
+      "release-type": "python"
     },
     "src": {
       "component": "src",
@@ -15,7 +16,7 @@
   "plugins": [
     {
       "type": "linked-versions",
-      "group-name": "ENACrestic",
+      "group-name": "enacrestic",
       "components": ["root", "src"]
     }
   ]
