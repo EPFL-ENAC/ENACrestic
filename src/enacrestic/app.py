@@ -28,13 +28,17 @@ It writes to the following files :
   State of previous execution
 """
 
+import functools
 import os
+import signal
+import socket
 import sys
 import webbrowser
 
 from pidfile import AlreadyRunningError, PIDFile
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QCoreApplication, QTimer
 from PyQt5.QtGui import QIcon
+from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWidgets import QAction, QApplication, QMenu, QSystemTrayIcon
 
 from enacrestic import const
@@ -43,7 +47,43 @@ from enacrestic.restic_backup import ResticBackup
 from enacrestic.state import State
 
 
-class QTEnacRestic(QApplication):
+def _start_app(self):
+    """
+    Start Qt App when everything is ready
+    This is common startup thing between GUI and noGUI
+    """
+    self.restic_backup = ResticBackup(self.state, self.logger)
+    self.timer = QTimer()
+    self.timer.timeout.connect(self.restic_backup.run)
+    self.timer.start(self.state.backup_every_n_minutes * 60_000)
+
+    self.check_for_latest_version_timer = QTimer()
+    self.check_for_latest_version_timer.timeout.connect(
+        self.state.maybe_check_for_latest_version
+    )
+    self.check_for_latest_version_timer.start(86_400_000)  # every hour
+
+    self.signal_watchdog = SignalWatchdog()
+
+
+class QTNoGuiEnacRestic(QCoreApplication):
+    """
+    Main app, starting QCoreApplication
+    used when --no-gui (typically on server)
+    """
+
+    def __init__(self, argv, logger, state):
+        super().__init__(argv)
+        self.logger = logger
+        self.state = state
+
+        QTimer.singleShot(100, self._start_app)
+
+    def _start_app(self):
+        _start_app(self)
+
+
+class QTGuiEnacRestic(QApplication):
     """
     Main app, starting QApplication and QSystemTrayIcon when it's ready.
     """
@@ -53,9 +93,11 @@ class QTEnacRestic(QApplication):
         self.logger = logger
         self.state = state
 
-        QTimer.singleShot(2000, self._start_when_systray_available)
+        # start app when systray is available
+        # workaround to fix automatic start when ENACrestic is launched at the session opening
+        QTimer.singleShot(2000, self._start_app)
 
-    def _start_when_systray_available(self):
+    def _start_app(self):
         self.tray_icon = QSystemTrayIcon(
             QIcon(const.ICONS["program_just_launched"][False]), parent=self
         )
@@ -88,22 +130,37 @@ class QTEnacRestic(QApplication):
         self.state.connect_to_gui(
             self.tray_icon, info_action, upgrade_action, autostart_action
         )
-        self.restic_backup = ResticBackup(self.state, self.logger)
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.restic_backup.run)
-        self.timer.start(self.state.backup_every_n_minutes * 60_000)
 
-        self.check_for_latest_version_timer = QTimer()
-        self.check_for_latest_version_timer.timeout.connect(
-            self.state.maybe_check_for_latest_version
-        )
-        self.check_for_latest_version_timer.start(86_400_000)  # every hour
+        _start_app(self)
 
     def open_upgrade_instructions(self):
         webbrowser.open(const.UPGRADE_DOC)
 
 
-def main():
+class SignalWatchdog(QAbstractSocket):
+    """
+    Watchdog to propagates system signals from Python to QEventLoop
+    https://stackoverflow.com/a/65802260/446302
+    """
+
+    def __init__(self):
+        super().__init__(QAbstractSocket.SctpSocket, None)
+        self.writer, self.reader = socket.socketpair()
+        self.writer.setblocking(False)
+        signal.set_wakeup_fd(self.writer.fileno())  # Python hook
+        self.setSocketDescriptor(self.reader.fileno())  # Qt hook
+        self.readyRead.connect(lambda: None)  # Dummy function call
+
+
+def sigterm_handler(app, signal_num, stack_frame):
+    """
+    Handler for the SIGINT signal
+    Will ensures that everything is closed on SIGTERM
+    """
+    app.quit()
+
+
+def main(gui_enabled=True):
     # Create pref folder if doesn't exist yet
     if not os.path.exists(const.ENACRESTIC_PREF_FOLDER):
         os.makedirs(const.ENACRESTIC_PREF_FOLDER)
@@ -112,7 +169,17 @@ def main():
         try:
             with PIDFile(const.PID_FILE):
                 with State(logger) as state:
-                    app = QTEnacRestic(sys.argv, logger, state)
+                    if gui_enabled:
+                        app = QTGuiEnacRestic(sys.argv, logger, state)
+                    else:
+                        app = QTNoGuiEnacRestic(sys.argv, logger, state)
+                    signal.signal(
+                        signal.SIGTERM,
+                        functools.partial(
+                            sigterm_handler,
+                            app,
+                        ),
+                    )
                     sys.exit(app.exec_())
         except AlreadyRunningError:
             logger.write("Already running -> quit")

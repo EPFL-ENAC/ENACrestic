@@ -27,6 +27,7 @@ class State:
         self.logger = logger
         self.tray_icon = None  # filled by connect_to_gui
         self.info_action = None  # filled by connect_to_gui
+        self.upgrade_action = None  # filled by connect_to_gui
         self.autostart_action = None  # filled by connect_to_gui
         self.last_failed_datetime = None
 
