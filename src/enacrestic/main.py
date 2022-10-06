@@ -10,9 +10,17 @@ def main():
         prog="enacrestic", description="Automate restic execution"
     )
     parser.add_argument("--version", action="version", version=__version__)
-    parser.parse_args()
+    parser.add_argument(
+        "--no-gui",
+        dest="gui",
+        action="store_const",
+        const=False,
+        default=True,
+        help="disable GUI integration (system tray ++)",
+    )
+    args = parser.parse_args()
 
-    app.main()
+    app.main(gui_enabled=args.gui)
 
 
 if __name__ == "__main__":
