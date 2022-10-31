@@ -20,7 +20,7 @@ def main():
     )
     args = parser.parse_args()
 
-    app.main(gui_enabled=args.gui)
+    app.App(gui_enabled=args.gui)
 
 
 if __name__ == "__main__":

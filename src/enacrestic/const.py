@@ -12,11 +12,15 @@ VERSION_INFO = tuple(map(lambda x: int(x), __version__.split(".")))
 
 PYPI_PROJECT_URL = "https://pypi.org/pypi/ENACrestic/json"
 UPGRADE_DOC = "https://github.com/EPFL-ENAC/ENACrestic#upgrade"
-CHECK_NEW_VERSION_EVERY_N_DAYS = 7
+DEF_CHECK_NEW_VERSION_EVERY_N_DAYS = 7
 
 # App related
 DEF_BACKUP_EVERY_N_MINUTES = 30
-DEF_FORGET_EVERY_N_ITERATIONS = 10
+DEF_FORGET_EVERY_N_BACKUPS = 10
+
+DEF_GUI_AUTOSTART = False
+
+NB_CHRONOS_TO_SAVE = 10
 
 ENACRESTIC_PREF_FOLDER = os.path.expanduser("~/.enacrestic")
 
@@ -27,6 +31,7 @@ RESTIC_USER_PREFS = {
     "ENV": os.path.join(ENACRESTIC_PREF_FOLDER, "env.sh"),
 }
 RESTIC_LOGFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "last_backups.log")
+RESTIC_CONFFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "prefs.json")
 RESTIC_STATEFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "state.json")
 RESTIC_AUTOSTART_FILE = os.path.expanduser("~/.config/autostart/enacrestic.desktop")
 
@@ -41,41 +46,4 @@ PID_FILE = f"/run/user/{UID}/enacrestic.pid"
 
 ICONS_FOLDER = os.path.abspath(f"{__file__}/../pixmaps")
 
-ICONS = {
-    "program_just_launched": {
-        False: f"{ICONS_FOLDER}/just_launched.png",
-        True: f"{ICONS_FOLDER}/just_launched_badge.png",
-    },
-    "backup_in_pause": {
-        False: f"{ICONS_FOLDER}/backup_in_pause.png",
-        True: f"{ICONS_FOLDER}/backup_in_pause_badge.png",
-    },
-    "backup_success": {
-        False: f"{ICONS_FOLDER}/backup_success.png",
-        True: f"{ICONS_FOLDER}/backup_success_badge.png",
-    },
-    "backup_failed": {
-        False: f"{ICONS_FOLDER}/backup_failed.png",
-        True: f"{ICONS_FOLDER}/backup_failed_badge.png",
-    },
-    "backup_no_network": {
-        False: f"{ICONS_FOLDER}/backup_no_network.png",
-        True: f"{ICONS_FOLDER}/backup_no_network_badge.png",
-    },
-    "backup_in_progress": {
-        False: f"{ICONS_FOLDER}/backup_in_progress.png",
-        True: f"{ICONS_FOLDER}/backup_in_progress.png",
-    },
-    "backup_in_progress_failed": {
-        False: f"{ICONS_FOLDER}/backup_in_progress.png",
-        True: f"{ICONS_FOLDER}/backup_in_progress.png",
-    },
-    "backup_in_progress_no_network": {
-        False: f"{ICONS_FOLDER}/backup_in_progress.png",
-        True: f"{ICONS_FOLDER}/backup_in_progress.png",
-    },
-    "forget_in_progress": {
-        False: f"{ICONS_FOLDER}/forget_in_progress.png",
-        True: f"{ICONS_FOLDER}/forget_in_progress.png",
-    },
-}
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
