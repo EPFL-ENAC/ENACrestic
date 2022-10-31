@@ -1,32 +1,53 @@
 """
 Manages the execution of restic command
 """
+import datetime
 import os
 import re
-import time
+from enum import Enum
 
 from PyQt5.QtCore import QProcess, QProcessEnvironment
 
 from enacrestic import const
+from enacrestic.state import Operation, Status
+
+
+class ResticCompletionStatus(Enum):
+    """
+    Enumerate all possible restic completion status
+    """
+
+    NO_ERROR = ""
+    TIMEOUT = "timeout"
+    REPO_LOCKED = "repo locked"
 
 
 class ResticBackup:
-    def __init__(self, state, logger):
-        self.state = state
-        self.logger = logger
+    def __init__(self, app):
+        self.app = app
         self._load_env_variables()
+        self.current_utc_dt_starting = None
 
     def run(self):
-        if not self.state.want_to_backup():
-            self.logger.write_new_date_section()
-            self.logger.write(
-                f"Backup not launched. " f"Current state is {self.state.current_state}"
+        if not self.app.state.want_to_backup():
+            self.app.logger.write_new_date_section(
+                f"Backup not launched. "
+                f"Current state is {self.app.state.current_operation.value}"
             )
             return
 
-        # Run restic backup
-        self._run_backup()
-        self.logger.write()
+        # Run queued commands, one by one
+        self._run_next_operation()
+
+    def _run_next_operation(self):
+        next_operation = self.app.state.next_operation()
+        self.app.qt_app.update_system_tray()
+        if next_operation is None:
+            return
+        elif next_operation == Operation.BACKUP:
+            self._run_backup()
+        elif next_operation == Operation.FORGET:
+            self._run_forget()
 
     def _load_env_variables(self):
         """
@@ -55,14 +76,12 @@ class ResticBackup:
         except FileNotFoundError:
             pass
         if not self.env.contains("RESTIC_REPOSITORY"):
-            self.logger.write(
-                f'Warning: {const.RESTIC_USER_PREFS["ENV"]} '
-                f"seems not configured correctly"
+            self.app.logger.error(
+                f"{const.RESTIC_USER_PREFS['ENV']} seems not configured correctly"
             )
 
     def _run_backup(self):
-        self.logger.write_new_date_section()
-        self.logger.write("Running restic backup!")
+        self.app.logger.write_new_date_section("Running restic backup!")
         cmd = "restic"
         args = [
             "backup",
@@ -76,8 +95,7 @@ class ResticBackup:
         self._run(cmd, args)
 
     def _run_forget(self):
-        self.logger.write_new_date_section()
-        self.logger.write("Running restic forget!")
+        self.app.logger.write_new_date_section("Running restic forget!")
         cmd = "restic"
         args = [
             "forget",
@@ -110,46 +128,55 @@ class ResticBackup:
         self.p.stateChanged.connect(self._handle_state)
         self.p.finished.connect(self._process_finished)
         self.p.start(cmd, args)
-        self.current_error = ""
+        self.current_process_completion_status = ResticCompletionStatus.NO_ERROR
 
     def _handle_stdout(self):
         data = self.p.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
-        self.logger.write(stdout)
+        self.app.logger.write(stdout)
 
     def _handle_stderr(self):
         data = self.p.readAllStandardError()
         stderr = bytes(data).decode("utf8")
         if re.search(r"timeout", stderr):
-            self.current_error = "timeout"
-        self.logger.error(stderr)
+            self.current_process_completion_status = ResticCompletionStatus.TIMEOUT
+        if re.search(r"Fatal: unable to create lock", stderr):
+            self.current_process_completion_status = ResticCompletionStatus.REPO_LOCKED
+        self.app.logger.error(stderr)
 
     def _handle_state(self, proc_state):
         if proc_state == QProcess.Starting:
-            self.current_time_starting = time.time()
+            self.current_utc_dt_starting = datetime.datetime.utcnow()
+            self.app.qt_app.update_system_tray()
         elif proc_state == QProcess.NotRunning:
-            self.current_chrono = time.time() - self.current_time_starting
+            self.current_chrono = (
+                datetime.datetime.utcnow() - self.current_utc_dt_starting
+            )
 
     def _process_finished(self):
         exitCode = self.p.exitCode()
         if self.p.exitStatus() == QProcess.NormalExit:
             if exitCode == 0:
-                completion_status = "ok"
+                completion_status = Status.OK
             else:
-                if self.current_error == "timeout":
-                    completion_status = "no network"
+                if (
+                    self.current_process_completion_status
+                    == ResticCompletionStatus.TIMEOUT
+                ):
+                    completion_status = Status.NO_NETWORK
                 else:
-                    completion_status = "failed"
+                    completion_status = Status.LAST_OPERATION_FAILED
         else:
-            completion_status = "failed"
-        next_action = self.state.finished_restic_cmd(
-            completion_status, self.current_chrono
+            completion_status = Status.LAST_OPERATION_FAILED
+        self.app.state.finished_restic_cmd(
+            completion_status, self.current_utc_dt_starting, self.current_chrono
         )
-        self.logger.write(
+        self.app.logger.write(
             f"Process finished ({exitCode}) in "
-            f"{self.current_chrono:.3f} seconds with status: '{completion_status}'\n"
+            f"{self.current_chrono.total_seconds():.2f} seconds "
+            f"with status: '{completion_status.value}'\n\n"
         )
 
+        self.current_utc_dt_starting = None
         self.p = None
-        if next_action == "run forget":
-            self._run_forget()
+        self._run_next_operation()

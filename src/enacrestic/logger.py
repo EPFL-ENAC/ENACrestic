@@ -25,7 +25,7 @@ class Logger:
                     f_out.writelines(f_in)
             os.remove(dest)
 
-    def __init__(self):
+    def __init__(self, gui_enabled):
         self.logger = logging.getLogger()
         rotating_file_handler = TimedRotatingFileHandler(
             filename=const.RESTIC_LOGFILE,
@@ -38,19 +38,25 @@ class Logger:
         rotating_file_handler.rotator = Logger.GZipRotator()
         self.logger.addHandler(rotating_file_handler)
         self.logger.setLevel(logging.INFO)
+        if gui_enabled:
+            self.app_flavor = ""
+        else:
+            self.app_flavor = "(noGUI) "
 
     def __enter__(self):
-        self.write_new_date_section()
-        self.write(f"Started ENACrestic {__version__}\n")
+        self.write_new_date_section(
+            f"Started ENACrestic {self.app_flavor}{__version__}\n"
+        )
         return self
 
     def __exit__(self, typ, value, traceback):
-        self.write_new_date_section()
-        self.write(f"Stopped ENACrestic {__version__}\n")
+        self.write_new_date_section(f"Stopped ENACrestic {__version__}\n")
 
-    def write_new_date_section(self):
-        message = "-" * 50 + f"\n{datetime.datetime.now()}"
-        self.write(message)
+    def write_new_date_section(self, message=None):
+        section_header = "-" * 50 + f"\n{datetime.datetime.now()}"
+        self.write(section_header)
+        if message is not None:
+            self.write(message)
 
     def write(self, message=""):
         self.logger.info(message)
