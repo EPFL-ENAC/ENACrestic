@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "enacrestic"
-version = "0.2.0"
+version = "0.3.0"
 description = "Automate backups using restic"
 authors = ["Samuel Bancal <Samuel.Bancal@epfl.ch>"]
 license = "GPLv3"
