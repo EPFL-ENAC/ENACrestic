@@ -4,6 +4,7 @@ Manages the execution of restic command
 import datetime
 import os
 import re
+import signal
 from enum import Enum
 
 from PyQt5.QtCore import QProcess, QProcessEnvironment
@@ -27,6 +28,7 @@ class ResticBackup:
         self.app = app
         self._load_env_variables()
         self.current_utc_dt_starting = None
+        self.p = None
 
     def run(self):
         if not self.app.state.want_to_backup():
@@ -38,6 +40,15 @@ class ResticBackup:
 
         # Run queued commands, one by one
         self._run_next_operation()
+
+    def terminate(self):
+        """
+        Terminate currently running process, if any
+        with SIGINT, equivalent to sending ctrl-c.
+        This is the clean way to interrupt restic
+        """
+        if self.p is not None:
+            os.kill(self.p.processId(), signal.SIGINT)
 
     def _run_next_operation(self):
         next_operation = self.app.state.next_operation()
