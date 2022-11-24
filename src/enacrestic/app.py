@@ -111,7 +111,7 @@ class QTGuiApp(QApplication):
 
         # Entry to exit the application by the user
         exit_action = menu.addAction("Exit")
-        exit_action.triggered.connect(self.quit)
+        exit_action.triggered.connect(self.app.quit)
 
         self.tray_icon.setContextMenu(menu)
 
@@ -339,7 +339,7 @@ class App:
             signal.SIGTERM,
             functools.partial(
                 sigterm_handler,
-                self.qt_app,
+                self,
             ),
         )
 
@@ -391,3 +391,32 @@ class App:
                 )
                 self.state.latest_version_available = __version__
             self.qt_app.update_system_tray()
+
+    def quit(self):
+        """
+        triggered when the app is being closed
+        """
+        self.state.empty_queue()
+        if self.state.current_operation in (
+            CurrentOperation.BACKUP_IN_PROGRESS,
+            CurrentOperation.FORGET_IN_PROGRESS,
+        ):
+            self.logger.write(
+                "Closing the app. Waiting for restic process to be finished"
+            )
+            self.restic_backup.terminate()
+        QTimer.singleShot(100, self._quit_part2)
+
+    def _quit_part2(self):
+        """
+        triggered behind self.quit + a short delay
+        to let current operations to close cleanly
+        """
+        if self.state.current_operation in (
+            CurrentOperation.BACKUP_IN_PROGRESS,
+            CurrentOperation.FORGET_IN_PROGRESS,
+        ):
+            self.logger.write("Waiting for restic process to be finished")
+            QTimer.singleShot(200, self._quit_part2)
+        else:
+            self.qt_app.quit()

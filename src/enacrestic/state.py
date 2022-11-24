@@ -238,3 +238,10 @@ class State:
             self.last_failed_utc_dt = datetime.datetime.utcnow()
             self.queue = []
         self.current_status = completion_status
+
+    def empty_queue(self):
+        """
+        Empty queue
+        Useful when we want to quit the app and terminate processes in progress
+        """
+        self.queue = []
