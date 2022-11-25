@@ -237,6 +237,10 @@ average over the last %d : %s""" % (
             state_msg += "Cleanup in progress"
             if self.app.restic_backup.current_utc_dt_starting is not None:
                 state_msg += f" (started {_str_date(self.app.restic_backup.current_utc_dt_starting)})"
+        elif self.app.state.current_operation == CurrentOperation.UNLOCK_IN_PROGRESS:
+            state_msg += "Unlock in progress"
+            if self.app.restic_backup.current_utc_dt_starting is not None:
+                state_msg += f" (started {_str_date(self.app.restic_backup.current_utc_dt_starting)})"
 
         # Add conditionnal stats on last backups and last cleanups
         last_chronos = _str_last_chronos("backup", self.app.state.prev_backup_chronos)
