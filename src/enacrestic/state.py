@@ -138,15 +138,15 @@ class State:
                 )
             elif self.current_status == Status.LAST_OPERATION_FAILED:
                 return (
-                    f"{const.ICONS_FOLDER}/backup_failed_badge.png"
+                    f"{const.ICONS_FOLDER}/error_badge.png"
                     if self.version_need_upgrade()
-                    else f"{const.ICONS_FOLDER}/backup_failed.png"
+                    else f"{const.ICONS_FOLDER}/error.png"
                 )
             elif self.current_status == Status.NO_NETWORK:
                 return (
-                    f"{const.ICONS_FOLDER}/backup_no_network_badge.png"
+                    f"{const.ICONS_FOLDER}/no_network_badge.png"
                     if self.version_need_upgrade()
-                    else f"{const.ICONS_FOLDER}/backup_no_network.png"
+                    else f"{const.ICONS_FOLDER}/no_network.png"
                 )
             else:
                 self.app.logger.error(
