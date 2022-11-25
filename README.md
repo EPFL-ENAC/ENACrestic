@@ -202,6 +202,17 @@ You can check it's activity by reading the `~/.enacrestic/last_backups.log` file
 
 Note : **First backup can take a long time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
 
+# Note on old backups retention policy
+
+By default, every 10 backups, a `restic forget` will clean repository from backups that don't need to be kept, according the following retention policy:
+
+- keep the last `3` backups
+- keep the last `24` hourly backups
+- keep the last `7` daily backups
+- keep the last `4` weekly backups
+- keep the last `12` monthly backups
+- keep the last `5` yearly backups
+
 # What ENACrestic doesn't do
 
 ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use _restic_ itself. Here are basic commands :
