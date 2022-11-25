@@ -11,8 +11,8 @@ A simple Qt GUI to automate backups with [restic](https://restic.net/)
 - ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
 - ![forget_in_progress](doc_pixmaps/forget_in_progress.png) `restic forget` is running
 - ![backup_success](doc_pixmaps/backup_success.png) backup is completed
-- ![backup_failed](doc_pixmaps/backup_failed.png) last backup failed
-- ![backup_no_network](doc_pixmaps/backup_no_network.png) last backup failed because of a network timeout (maybe the VPN is not running?)
+- ![error](doc_pixmaps/error.png) last operation failed
+- ![no_network](doc_pixmaps/no_network.png) last backup failed because of a network timeout (maybe the VPN is not running?)
 
 # Installation
 
