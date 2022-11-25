@@ -10,6 +10,7 @@ A simple Qt GUI to automate backups with [restic](https://restic.net/)
 
 - ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
 - ![forget_in_progress](doc_pixmaps/forget_in_progress.png) `restic forget` is running
+- ![unlock_in_progress](doc_pixmaps/unlock_in_progress.png) `restic unlock` is running
 - ![backup_success](doc_pixmaps/backup_success.png) backup is completed
 - ![error](doc_pixmaps/error.png) last operation failed
 - ![no_network](doc_pixmaps/no_network.png) last backup failed because of a network timeout (maybe the VPN is not running?)
@@ -65,6 +66,8 @@ export RESTIC_REPOSITORY=s3:s3.epfl.ch/bucket_name/restic_MyComputerName
 export AWS_ACCESS_KEY_ID=TheBucketRWAccessKey
 export AWS_SECRET_ACCESS_KEY=TheBucketRWSecretKey
 ```
+
+Note, although Restic is able to manage several computers being backed up on a common respository, it's not recommended with ENACrestic. Keep a dedicated `RESTIC_REPOSITORY` per machine.
 
 ### Write password file
 

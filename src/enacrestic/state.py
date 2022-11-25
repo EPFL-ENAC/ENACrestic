@@ -15,6 +15,7 @@ class Operation(Enum):
 
     BACKUP = "backup"
     FORGET = "forget"
+    UNLOCK = "unlock"
 
 
 class CurrentOperation(Enum):
@@ -25,6 +26,7 @@ class CurrentOperation(Enum):
     JUST_LAUNCHED = "just_launched"
     BACKUP_IN_PROGRESS = "backup_in_progress"
     FORGET_IN_PROGRESS = "forget_in_progress"
+    UNLOCK_IN_PROGRESS = "unlock_in_progress"
     IDLE = "idle"
 
 
@@ -36,6 +38,7 @@ class Status(Enum):
     OK = "ok"
     LAST_OPERATION_FAILED = "last_operation_failed"
     NO_NETWORK = "no_network"
+    REPO_LOCKED = "repo_locked"
 
 
 class State:
@@ -148,6 +151,8 @@ class State:
                     if self.version_need_upgrade()
                     else f"{const.ICONS_FOLDER}/no_network.png"
                 )
+            elif self.current_status == Status.REPO_LOCKED:
+                return f"{const.ICONS_FOLDER}/repo_locked.png"
             else:
                 self.app.logger.error(
                     f"unexpected state: {self.current_operation=} {self.current_status=}"
@@ -161,6 +166,8 @@ class State:
             return f"{const.ICONS_FOLDER}/backup_in_progress.png"
         elif self.current_operation == CurrentOperation.FORGET_IN_PROGRESS:
             return f"{const.ICONS_FOLDER}/forget_in_progress.png"
+        elif self.current_operation == CurrentOperation.UNLOCK_IN_PROGRESS:
+            return f"{const.ICONS_FOLDER}/unlock_in_progress.png"
         else:
             self.app.logger.error(
                 f"unexpected state: {self.current_operation=} {self.current_status=}"
@@ -197,6 +204,8 @@ class State:
                 self.current_operation = CurrentOperation.BACKUP_IN_PROGRESS
             elif operation == Operation.FORGET:
                 self.current_operation = CurrentOperation.FORGET_IN_PROGRESS
+            elif operation == Operation.UNLOCK:
+                self.current_operation = CurrentOperation.UNLOCK_IN_PROGRESS
             else:
                 self.app.logger.error(
                     f"unexpected Operation: {operation.value=} -> skipping"
@@ -208,7 +217,9 @@ class State:
             self.current_operation = CurrentOperation.IDLE
             return None
 
-    def finished_restic_cmd(self, completion_status, start_utc_dt, chrono):
+    def finished_restic_cmd(
+        self, completion_status, start_utc_dt, chrono, queue_repo_unlock
+    ):
         """
         + when success:
           + save chrono for current operation (backup or forget)
@@ -233,10 +244,20 @@ class State:
                 self.prev_forget_chronos.insert(0, (start_utc_dt, chrono_seconds))
                 if len(self.prev_forget_chronos) > const.NB_CHRONOS_TO_SAVE:
                     self.prev_forget_chronos.pop()
+        elif completion_status == Status.REPO_LOCKED:
+            self.last_failed_utc_dt = datetime.datetime.utcnow()
         else:
             # Don't do more things yet if NO_NETWORK or LAST_OPERATION_FAILED
             self.last_failed_utc_dt = datetime.datetime.utcnow()
             self.queue = []
+
+        if queue_repo_unlock:
+            if self.current_operation == CurrentOperation.BACKUP_IN_PROGRESS:
+                self.queue.insert(0, Operation.BACKUP)
+            elif self.current_operation == CurrentOperation.FORGET_IN_PROGRESS:
+                self.queue.insert(0, Operation.FORGET)
+            self.queue.insert(0, Operation.UNLOCK)
+
         self.current_status = completion_status
 
     def empty_queue(self):

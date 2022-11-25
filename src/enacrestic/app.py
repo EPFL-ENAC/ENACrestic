@@ -86,7 +86,8 @@ class QTGuiApp(QApplication):
         """
         Start Qt System tray when everything is ready
         """
-        self.tray_icon = QSystemTrayIcon(QIcon(self.app.state.get_icon()), parent=self)
+        icon_path = self.app.state.get_icon()
+        self.tray_icon = QSystemTrayIcon(QIcon(icon_path), parent=self)
         self.tray_icon.show()
 
         menu = QMenu()
@@ -205,7 +206,8 @@ average over the last %d : %s""" % (
         if self.tray_icon is None:
             return
 
-        self.tray_icon.setIcon(QIcon(self.app.state.get_icon()))
+        icon_path = self.app.state.get_icon()
+        self.tray_icon.setIcon(QIcon(icon_path))
 
         state_msg = f"ENACrestic {__version__}\n\n"
 
