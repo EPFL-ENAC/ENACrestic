@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.3.0...v0.4.0) (2022-11-28)
+
+
+### Features
+
+* **pixmaps:** renaming ([8871098](https://github.com/EPFL-ENAC/ENACrestic/commit/8871098b6eaa71e3ffab6d07cf3ad6d231290191))
+* **quit:** clean stop restic process if any ([0178fd6](https://github.com/EPFL-ENAC/ENACrestic/commit/0178fd6d5c372492e012640beefb146310432c37)), closes [#6](https://github.com/EPFL-ENAC/ENACrestic/issues/6)
+* **repo lock:** auto-unlock when locked since 30+ minutes ([6ab6c42](https://github.com/EPFL-ENAC/ENACrestic/commit/6ab6c42532ed9d59831e43145b0fba2a514ae9a1)), closes [#6](https://github.com/EPFL-ENAC/ENACrestic/issues/6) [#10](https://github.com/EPFL-ENAC/ENACrestic/issues/10)
+
+
+### Bug Fixes
+
+* **version:** fix auto-generated release-please 0.4.0 ([ae8daf3](https://github.com/EPFL-ENAC/ENACrestic/commit/ae8daf3e464d8cfafc6bf4771fbd63225fb187c6))
+
 ## [0.4.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.3.0...v0.4.0) (2022-11-25)
 
 
