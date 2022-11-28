@@ -57,6 +57,8 @@ class ResticBackup:
         self.app.qt_app.update_system_tray()
         if next_operation is None:
             return
+        elif next_operation == Operation.PRE_BACKUP:
+            self._run_prebackup()
         elif next_operation == Operation.BACKUP:
             self._run_backup()
         elif next_operation == Operation.FORGET:
@@ -98,6 +100,12 @@ class ResticBackup:
             self.app.logger.error(
                 f"{const.RESTIC_USER_PREFS['ENV']} seems not configured correctly"
             )
+
+    def _run_prebackup(self):
+        self.app.logger.write_new_date_section("Running restic pre_backup!")
+        cmd = const.PRE_BACKUP_HOOK
+        args = []
+        self._run(cmd, args)
 
     def _run_backup(self):
         self.app.logger.write_new_date_section("Running restic backup!")
@@ -168,21 +176,32 @@ class ResticBackup:
         data = self.p.readAllStandardError()
         stderr = bytes(data).decode("utf8")
         self.app.logger.error(stderr)
-        if re.search(r"timeout", stderr):
-            self.current_process_completion_status = ResticCompletionStatus.TIMEOUT
-        if re.search(r"the `unlock` command can be used to remove stale locks", stderr):
-            self.current_process_completion_status = ResticCompletionStatus.REPO_LOCKED
-            lock_ago_str = re.search(r"lock was created at.* \((.*)\)", stderr).group(1)
-            lock_hours_bool = re.search(r"\dh\d", lock_ago_str) is not None
-            try:
-                lock_minutes_int = int(re.search(r"(\d+)m", lock_ago_str).group(1))
-            except AttributeError:
-                lock_minutes_int = 0
-            self.need_to_unlock = lock_hours_bool or lock_minutes_int > 30
-            if not self.need_to_unlock:
-                self.app.logger.write(
-                    "The lock is too new. We expect 30+ minutes to unlock manually."
+        if self.state.current_operation in (
+            Operation.BACKUP,
+            Operation.FORGET,
+            Operation.UNLOCK,
+        ):
+            if re.search(r"timeout", stderr):
+                self.current_process_completion_status = ResticCompletionStatus.TIMEOUT
+            if re.search(
+                r"the `unlock` command can be used to remove stale locks", stderr
+            ):
+                self.current_process_completion_status = (
+                    ResticCompletionStatus.REPO_LOCKED
                 )
+                lock_ago_str = re.search(
+                    r"lock was created at.* \((.*)\)", stderr
+                ).group(1)
+                lock_hours_bool = re.search(r"\dh\d", lock_ago_str) is not None
+                try:
+                    lock_minutes_int = int(re.search(r"(\d+)m", lock_ago_str).group(1))
+                except AttributeError:
+                    lock_minutes_int = 0
+                self.need_to_unlock = lock_hours_bool or lock_minutes_int > 30
+                if not self.need_to_unlock:
+                    self.app.logger.write(
+                        "The lock is too new. We expect 30+ minutes to unlock manually."
+                    )
 
     def _handle_state(self, proc_state):
         if proc_state == QProcess.Starting:

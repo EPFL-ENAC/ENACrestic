@@ -220,6 +220,8 @@ average over the last %d : %s""" % (
         elif self.app.state.current_operation == CurrentOperation.IDLE:
             if self.app.state.current_status == Status.OK:
                 state_msg += "Last backup was successful"
+                if self.app.state.pre_backup_failed:
+                    state_msg += " but pre-backup hook failed"
             elif self.app.state.current_status == Status.LAST_OPERATION_FAILED:
                 state_msg += (
                     f"Last operation failed, {_str_date(self.app.state.last_failed_utc_dt)}\n"
@@ -229,6 +231,12 @@ average over the last %d : %s""" % (
                 state_msg += (
                     f"Network timeout {_str_date(self.app.state.last_failed_utc_dt)}"
                 )
+        elif (
+            self.app.state.current_operation == CurrentOperation.PRE_BACKUP_IN_PROGRESS
+        ):
+            state_msg += "Pre-backup in progress"
+            if self.app.restic_backup.current_utc_dt_starting is not None:
+                state_msg += f" (started {_str_date(self.app.restic_backup.current_utc_dt_starting)})"
         elif self.app.state.current_operation == CurrentOperation.BACKUP_IN_PROGRESS:
             state_msg += "Backup in progress"
             if self.app.restic_backup.current_utc_dt_starting is not None:

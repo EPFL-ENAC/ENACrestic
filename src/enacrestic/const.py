@@ -33,6 +33,7 @@ RESTIC_USER_PREFS = {
 RESTIC_LOGFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "last_backups.log")
 RESTIC_CONFFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "prefs.json")
 RESTIC_STATEFILE = os.path.join(ENACRESTIC_PREF_FOLDER, "state.json")
+PRE_BACKUP_HOOK = os.path.join(ENACRESTIC_PREF_FOLDER, "pre_backup")
 RESTIC_AUTOSTART_FILE = os.path.expanduser("~/.config/autostart/enacrestic.desktop")
 
 LOGFILE_ROTATION_EVERY_N_DAYS = 30
