@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 from enum import Enum
 
 from dynaconf import Dynaconf
@@ -13,6 +14,7 @@ class Operation(Enum):
     Enumerate all operations that app can run
     """
 
+    PRE_BACKUP = "pre_backup"
     BACKUP = "backup"
     FORGET = "forget"
     UNLOCK = "unlock"
@@ -24,6 +26,7 @@ class CurrentOperation(Enum):
     """
 
     JUST_LAUNCHED = "just_launched"
+    PRE_BACKUP_IN_PROGRESS = "pre_backup_in_progress"
     BACKUP_IN_PROGRESS = "backup_in_progress"
     FORGET_IN_PROGRESS = "forget_in_progress"
     UNLOCK_IN_PROGRESS = "unlock_in_progress"
@@ -48,6 +51,7 @@ class State:
 
     def __init__(self, app):
         self.app = app
+        self.pre_backup_failed = False
 
     def __enter__(self):
         self._load()
@@ -134,11 +138,18 @@ class State:
             )
         elif self.current_operation == CurrentOperation.IDLE:
             if self.current_status == Status.OK:
-                return (
-                    f"{const.ICONS_FOLDER}/backup_success_badge.png"
-                    if self.version_need_upgrade()
-                    else f"{const.ICONS_FOLDER}/backup_success.png"
-                )
+                if not self.pre_backup_failed:
+                    return (
+                        f"{const.ICONS_FOLDER}/backup_success_badge.png"
+                        if self.version_need_upgrade()
+                        else f"{const.ICONS_FOLDER}/backup_success.png"
+                    )
+                else:
+                    return (
+                        f"{const.ICONS_FOLDER}/error_badge.png"
+                        if self.version_need_upgrade()
+                        else f"{const.ICONS_FOLDER}/error.png"
+                    )
             elif self.current_status == Status.LAST_OPERATION_FAILED:
                 return (
                     f"{const.ICONS_FOLDER}/error_badge.png"
@@ -162,6 +173,8 @@ class State:
                     if self.version_need_upgrade()
                     else f"{const.ICONS_FOLDER}/just_launched.png"
                 )
+        elif self.current_operation == CurrentOperation.PRE_BACKUP_IN_PROGRESS:
+            return f"{const.ICONS_FOLDER}/pre_backup_in_progress.png"
         elif self.current_operation == CurrentOperation.BACKUP_IN_PROGRESS:
             return f"{const.ICONS_FOLDER}/backup_in_progress.png"
         elif self.current_operation == CurrentOperation.FORGET_IN_PROGRESS:
@@ -187,7 +200,11 @@ class State:
             CurrentOperation.IDLE,
             CurrentOperation.JUST_LAUNCHED,
         ):
-            self.queue = [Operation.BACKUP]
+            pre_backup_hook_is_executable = os.access(const.PRE_BACKUP_HOOK, os.X_OK)
+            if pre_backup_hook_is_executable:
+                self.queue = [Operation.PRE_BACKUP, Operation.BACKUP]
+            else:
+                self.queue = [Operation.BACKUP]
             return True
         else:
             return False
@@ -200,7 +217,10 @@ class State:
         """
         if len(self.queue) > 0:
             operation = self.queue.pop(0)
-            if operation == Operation.BACKUP:
+            if operation == Operation.PRE_BACKUP:
+                self.current_operation = CurrentOperation.PRE_BACKUP_IN_PROGRESS
+                self.pre_backup_failed = False
+            elif operation == Operation.BACKUP:
                 self.current_operation = CurrentOperation.BACKUP_IN_PROGRESS
             elif operation == Operation.FORGET:
                 self.current_operation = CurrentOperation.FORGET_IN_PROGRESS
@@ -247,9 +267,12 @@ class State:
         elif completion_status == Status.REPO_LOCKED:
             self.last_failed_utc_dt = datetime.datetime.utcnow()
         else:
-            # Don't do more things yet if NO_NETWORK or LAST_OPERATION_FAILED
-            self.last_failed_utc_dt = datetime.datetime.utcnow()
-            self.queue = []
+            if self.current_operation == CurrentOperation.PRE_BACKUP_IN_PROGRESS:
+                self.pre_backup_failed = True
+            else:
+                # Don't do more things yet if NO_NETWORK or LAST_OPERATION_FAILED
+                self.last_failed_utc_dt = datetime.datetime.utcnow()
+                self.queue = []
 
         if queue_repo_unlock:
             if self.current_operation == CurrentOperation.BACKUP_IN_PROGRESS:

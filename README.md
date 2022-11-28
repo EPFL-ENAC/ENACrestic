@@ -8,6 +8,7 @@ A simple Qt GUI to automate backups with [restic](https://restic.net/)
 2. Run _restic forget_ in a regular basis (and transparently) to keep your backup light and useful
 3. Let you see when :
 
+- ![pre_backup_in_progress](doc_pixmaps/pre_backup_in_progress.png) `pre_backup` script is running
 - ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
 - ![forget_in_progress](doc_pixmaps/forget_in_progress.png) `restic forget` is running
 - ![unlock_in_progress](doc_pixmaps/unlock_in_progress.png) `restic unlock` is running
