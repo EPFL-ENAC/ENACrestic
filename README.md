@@ -37,7 +37,7 @@ This has been tested and validated on
 - _Ubuntu 22.04 LTS_
 
 ```bash
-sudo apt install restic python3-pip qt5dxcb-plugin
+sudo apt install restic python3-pip qt5dxcb-plugin python3-pyqt5
 pip3 install --user --upgrade pip
 pip3 install --user enacrestic
 ```
@@ -185,7 +185,7 @@ Now close + open a new terminal to get it all into your environment ... or simpl
 
 🎉 Setup is now complete! You're now ready to send your 1st backup. 🎉
 
-# Run `enacrestic`
+# Run **ENACrestic** on your computer
 
 - from Ubuntu's Application launcher
 - or from command line with the single command `enacrestic`
@@ -203,6 +203,49 @@ From now on, ENACrestic is running in the background and doing the backups on a 
 You can check it's activity by reading the `~/.enacrestic/last_backups.log` file.
 
 Note : **First backup can take a long time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
+
+# Run **ENACrestic** on a server
+
+Add a dedicated _Systemd_ service file:
+
+```bash
+vi /etc/systemd/system/enacrestic.service
+```
+
+```
+[Unit]
+Description=ENACrestic
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root
+ExecStart=/root/.local/bin/enacrestic --no-gui
+KillSignal=SIGTERM
+Restart=on-failure
+RestartSec=30
+```
+
+Enable and start it:
+
+```bash
+systemctl daemon-reload
+systemctl enable enacrestic.service
+systemctl start enacrestic.service
+```
+
+That will ensure enacrestic service is started when the server boot.
+
+You can know its status with the following commands:
+
+```bash
+systemctl status enacrestic.service
+tail -n 50 -f /root/.enacrestic/last_backups.log
+```
 
 # Note on old backups retention policy
 
