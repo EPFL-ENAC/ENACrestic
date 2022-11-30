@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.0...v0.5.1) (2022-11-30)
+
+
+### Bug Fixes
+
+* **pidfile:** fix to run on server ([4eebd69](https://github.com/EPFL-ENAC/ENACrestic/commit/4eebd69c8f58d0a3a11e17a9178db2c6049e504c)), closes [#51](https://github.com/EPFL-ENAC/ENACrestic/issues/51)
+
 ## [0.5.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.4.0...v0.5.0) (2022-11-29)
 
 
