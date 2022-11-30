@@ -176,7 +176,7 @@ class ResticBackup:
         data = self.p.readAllStandardError()
         stderr = bytes(data).decode("utf8")
         self.app.logger.error(stderr)
-        if self.state.current_operation in (
+        if self.app.state.current_operation in (
             Operation.BACKUP,
             Operation.FORGET,
             Operation.UNLOCK,
