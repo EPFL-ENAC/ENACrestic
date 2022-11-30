@@ -43,7 +43,7 @@ ENACRESTIC_BIN = os.path.abspath(sys.argv[0])
 
 USERNAME = getpass.getuser()
 UID = pwd.getpwnam(USERNAME).pw_uid
-PID_FILE = f"/run/user/{UID}/enacrestic.pid"
+PID_FILE = os.path.join(ENACRESTIC_PREF_FOLDER, "enacrestic.pid")
 
 ICONS_FOLDER = os.path.abspath(f"{__file__}/../pixmaps")
 
