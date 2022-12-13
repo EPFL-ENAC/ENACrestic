@@ -10,7 +10,7 @@ from enum import Enum
 from PyQt5.QtCore import QProcess, QProcessEnvironment
 
 from enacrestic import const
-from enacrestic.state import Operation, Status
+from enacrestic.state import CurrentOperation, Operation, Status
 
 
 class ResticCompletionStatus(Enum):
@@ -177,9 +177,9 @@ class ResticBackup:
         stderr = bytes(data).decode("utf8")
         self.app.logger.error(stderr)
         if self.app.state.current_operation in (
-            Operation.BACKUP,
-            Operation.FORGET,
-            Operation.UNLOCK,
+            CurrentOperation.BACKUP_IN_PROGRESS,
+            CurrentOperation.FORGET_IN_PROGRESS,
+            CurrentOperation.UNLOCK_IN_PROGRESS,
         ):
             if re.search(r"timeout", stderr):
                 self.current_process_completion_status = ResticCompletionStatus.TIMEOUT
