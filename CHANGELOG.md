@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.2](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.1...v0.5.2) (2022-12-14)
+
+
+### Bug Fixes
+
+* **restic_backup.py:** fix error handling ([f5bb05b](https://github.com/EPFL-ENAC/ENACrestic/commit/f5bb05bc6e06c6bd76a8da7800f69b856eb0e4ad)), closes [#57](https://github.com/EPFL-ENAC/ENACrestic/issues/57)
+* **typo:** fix [#53](https://github.com/EPFL-ENAC/ENACrestic/issues/53) ([34b31d3](https://github.com/EPFL-ENAC/ENACrestic/commit/34b31d3bb67660dd556e0d22bfc8e9bad09e6e8f))
+
 ## [0.5.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.0...v0.5.1) (2022-11-30)
 
 
