@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=ENACrestic
 Comment=Automated Backup with restic
-Exec=enacrestic
+Exec=bash -c "export PATH=$HOME/.local/bin:$PATH; enacrestic"
 Icon=enacrestic
 Terminal=false
 Type=Application

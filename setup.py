@@ -9,14 +9,16 @@ Build it with :
 $ python3 -m build
 """
 
+import os
 import pathlib
+import sys
 
 from setuptools import setup
 
-from enacrestic import __version__
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+from enacrestic import __version__  # noqa: E402
 
 here = pathlib.Path(__file__).parent.resolve()
-
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 
@@ -60,7 +62,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "enacrestic=enacrestic:main",
+            "enacrestic=enacrestic:main.main",
         ],
     },
     project_urls={
