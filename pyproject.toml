@@ -2,7 +2,7 @@
 name = "ENACrestic"
 homepage = "https://github.com/EPFL-ENAC/ENACrestic#readme"
 repository = "https://github.com/EPFL-ENAC/ENACrestic"
-version = "0.5.1"
+version = "0.5.2"
 description = "Automate backups using restic"
 authors = ["Samuel Bancal <Samuel.Bancal@epfl.ch>"]
 license = "GPLv3"
