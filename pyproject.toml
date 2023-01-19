@@ -1,5 +1,7 @@
 [tool.poetry]
-name = "enacrestic"
+name = "ENACrestic"
+homepage = "https://github.com/EPFL-ENAC/ENACrestic#readme"
+repository = "https://github.com/EPFL-ENAC/ENACrestic"
 version = "0.5.1"
 description = "Automate backups using restic"
 authors = ["Samuel Bancal <Samuel.Bancal@epfl.ch>"]
@@ -21,7 +23,8 @@ pre-commit = "^2.20.0"
 [build-system]
 requires = [
     "setuptools>=42",
-    "wheel"
+    "wheel",
+    "dynaconf"
 ]
 build-backend = "setuptools.build_meta"
 

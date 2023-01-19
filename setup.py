@@ -1,36 +1,45 @@
 """
 Everything to package ENACrestic
 
-Based on :
+Based on:
 + https://packaging.python.org/tutorials/packaging-projects/
 + https://github.com/pypa/sampleproject
 
-Build it with :
+Build it with:
 $ python3 -m build
+
+This is automated with:
+$ make package
 """
 
-import os
 import pathlib
-import sys
+import re
 
+from dynaconf import Dynaconf
 from setuptools import setup
 
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
-from enacrestic import __version__  # noqa: E402
-
 here = pathlib.Path(__file__).parent.resolve()
-long_description = (here / "README.md").read_text(encoding="utf-8")
+pyproject_meta = Dynaconf(
+    settings_files=[here / "pyproject.toml"],
+)
 
+# ["Samuel Bancal <Samuel.Bancal@epfl.ch>"]
+author, author_email = map(
+    lambda s: s.strip(),
+    re.search(
+        r"^([^<]+)<([^>]+)>$", pyproject_meta.get("tool.poetry.authors")[0]
+    ).groups(),
+)
 
 setup(
-    name="ENACrestic",
-    version=__version__,
-    description="Automate backups using restic",
-    long_description=long_description,
+    name=pyproject_meta.get("tool.poetry.name"),
+    version=pyproject_meta.get("tool.poetry.version"),
+    description=pyproject_meta.get("tool.poetry.description"),
+    long_description=(here / "README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
-    url="https://github.com/EPFL-ENAC/ENACrestic",
-    author="Samuel Bancal",
-    author_email="Samuel.Bancal@epfl.ch",
+    url=pyproject_meta.get("tool.poetry.homepage"),
+    author=author,
+    author_email=author_email,
     classifiers=[
         "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",
