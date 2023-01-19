@@ -1,8 +1,11 @@
+name: release-please
+
 on:
   push:
     branches:
       - main
-name: release-please
+      - 20-release-to-pypi
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -11,3 +14,29 @@ jobs:
         with:
           release-type: node
           package-name: release-please-action
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo 'export PATH="$HOME/.poetry/bin:$PATH"' >> $GITHUB_ENV
+          source $GITHUB_ENV
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run script
+        run: make fix-version
+
+      - name: Commit changes
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "Github Action"
+          git commit -a --amend --no-edit
