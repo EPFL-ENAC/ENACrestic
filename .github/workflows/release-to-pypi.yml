@@ -1,19 +1,17 @@
 name: Release to PyPI
 
 on:
-  pull_request:
-    types: [closed]
+  create:
+    branches:
+      - 'main'
+      - '20-release-to-pypi'
+    tags:
+      - 'v*'
 
 jobs:
   build-n-publish:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
-
-    # ChatGPT suggestion 1
-    # if: github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'release-please')
-
-    # ChatGPT suggestion 2
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'release-please')
 
     steps:
       - name: Checkout source
