@@ -27,7 +27,7 @@ This has been tested and validated on
 ```bash
 sudo apt install restic python3-pip qt5dxcb-plugin
 pip3 install --user --upgrade pip
-pip3 install --user ENACrestic
+pip3 install --user enacrestic
 ```
 
 # Upgrade
@@ -35,7 +35,7 @@ pip3 install --user ENACrestic
 To upgrade ENACrestic to latest release, just run the following command :
 
 ```bash
-pip3 install --user --upgrade ENACrestic
+pip3 install --user --upgrade enacrestic
 ```
 
 # Config ENACrestic
@@ -184,7 +184,7 @@ restic init --password-file  ~/.enacrestic/.pw
 
 🎉 Setup is now complete! You're now ready to send your 1st backup. 🎉
 
-# Run `ENACrestic`
+# Run `enacrestic`
 
 - from Ubuntu's Application launcher
 - or from command line with the single command `enacrestic`

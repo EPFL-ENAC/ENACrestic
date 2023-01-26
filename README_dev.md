@@ -7,10 +7,10 @@
 # Release
 
 1. Check version in `.release-please-manifest.json`
-2. `ENACRESTIC_VERSION=$(poetry run python3 setup.py --version) && echo Working on ENACrestic $ENACRESTIC_VERSION`
+2. `ENACRESTIC_VERSION=$(poetry run python3 setup.py --version) && echo Working on enacrestic $ENACRESTIC_VERSION`
 3. `make package`
-4. test new package with `pip install --user dist/ENACrestic-${ENACRESTIC_VERSION}.tar.gz`
+4. test new package with `pip install --user dist/enacrestic-${ENACRESTIC_VERSION}.tar.gz`
 5. `git commit`
 6. `git tag $(python3 setup.py --version)`
 7. `git push && git push --tags`
-8. `python3 -m twine upload --repository ENACrestic --verbose dist/ENACrestic-${ENACRESTIC_VERSION}*`
+8. `python3 -m twine upload --repository enacrestic --verbose dist/enacrestic-${ENACRESTIC_VERSION}*`
