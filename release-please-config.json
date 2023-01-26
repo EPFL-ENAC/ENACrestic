@@ -11,7 +11,7 @@
   "plugins": [
     {
       "type": "linked-versions",
-      "group-name": "ENACrestic",
+      "group-name": "enacrestic",
       "components": ["root"]
     }
   ]
