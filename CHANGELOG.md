@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.6.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.1...v0.6.0) (2023-01-26)
+
+
+### Features
+
+* **PyPI:** release package to PyPI as CD ([a963c75](https://github.com/EPFL-ENAC/ENACrestic/commit/a963c75362b40f7941ce5b44d4633c6a711ceafb)), closes [#20](https://github.com/EPFL-ENAC/ENACrestic/issues/20)
+* **release:** add CD to publish to PyPI ([01abfd2](https://github.com/EPFL-ENAC/ENACrestic/commit/01abfd23db9386b501a446b6834d44638c0100e2)), closes [#20](https://github.com/EPFL-ENAC/ENACrestic/issues/20)
+* **release:** test to publish on test.pypi.org ([0588d14](https://github.com/EPFL-ENAC/ENACrestic/commit/0588d144a21716feae8f5720640b04a1f7871942))
+
+
+### Bug Fixes
+
+* **package:** fix build & fix .desktop file ([e99ec86](https://github.com/EPFL-ENAC/ENACrestic/commit/e99ec863d36b4197bad4bf8c0084a356379deedf)), closes [#20](https://github.com/EPFL-ENAC/ENACrestic/issues/20)
+* **restic_backup.py:** fix error handling ([f5bb05b](https://github.com/EPFL-ENAC/ENACrestic/commit/f5bb05bc6e06c6bd76a8da7800f69b856eb0e4ad)), closes [#57](https://github.com/EPFL-ENAC/ENACrestic/issues/57)
+* **typo:** fix [#53](https://github.com/EPFL-ENAC/ENACrestic/issues/53) ([34b31d3](https://github.com/EPFL-ENAC/ENACrestic/commit/34b31d3bb67660dd556e0d22bfc8e9bad09e6e8f))
+* **vscode:** fix non-sense config ([c3099cb](https://github.com/EPFL-ENAC/ENACrestic/commit/c3099cb7f5be1d694deff5e81248cff53505ba3c))
+
+
+### Documentation
+
+* **for devs:** update how to publish on PyPI (manualy) ([f1821b7](https://github.com/EPFL-ENAC/ENACrestic/commit/f1821b739030e3dc1111e777dab22e68d26a0ca6))
+
 ## [0.5.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.0...v0.5.1) (2022-11-30)
 
 
