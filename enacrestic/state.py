@@ -5,7 +5,7 @@ from enum import Enum
 
 from dynaconf import Dynaconf
 
-from enacrestic import __version__, const
+from enacrestic import VERSION, __version__, const
 from enacrestic.utils import local_str_to_utc, utc_to_local_str
 
 
@@ -124,7 +124,7 @@ class State:
         latest_version_info = tuple(
             try_to_int(ver) for ver in self.latest_version_available.split(".")
         )
-        return latest_version_info > const.VERSION_INFO
+        return latest_version_info > VERSION
 
     def get_icon(self):
         """
