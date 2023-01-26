@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 20-release-to-pypi
 
 jobs:
   release-please:
