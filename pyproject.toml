@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ENACrestic"
+name = "enacrestic"
 homepage = "https://github.com/EPFL-ENAC/ENACrestic#readme"
 repository = "https://github.com/EPFL-ENAC/ENACrestic"
 version = "0.5.1"
