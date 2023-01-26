@@ -24,4 +24,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print("attempt 3")
     main()
