@@ -6,17 +6,13 @@
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
       "prerelease": false
-    },
-    "src": {
-      "component": "src",
-      "release-type": "python"
     }
   },
   "plugins": [
     {
       "type": "linked-versions",
       "group-name": "ENACrestic",
-      "components": ["root", "src"]
+      "components": ["root"]
     }
   ]
 }

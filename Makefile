@@ -2,7 +2,7 @@ install:
 	poetry install
 
 run:
-	poetry run python3 src/enacrestic/main.py
+	poetry run python3 enacrestic/main.py
 
 lint:
 	poetry run pre-commit run -a
