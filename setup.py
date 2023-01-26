@@ -1,5 +1,5 @@
 """
-Everything to package ENACrestic
+Everything to package enacrestic
 
 Based on:
 + https://packaging.python.org/tutorials/packaging-projects/
