@@ -7,9 +7,5 @@ run:
 lint:
 	poetry run pre-commit run -a
 
-fix-version:
-	poetry run python3 utils/fix_version.py
-
 package:
-	$(MAKE) fix-version
 	poetry run python3 -m build
