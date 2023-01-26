@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.0...v0.6.1) (2023-01-26)
+
+
+### Bug Fixes
+
+* **release:** try another way to trigg release to PyPI ([77a093b](https://github.com/EPFL-ENAC/ENACrestic/commit/77a093bf0a9bda032d69c2808299fa1bcd7820f2))
+
 ## [0.6.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.1...v0.6.0) (2023-01-26)
 
 
