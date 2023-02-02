@@ -1,0 +1,19 @@
+name: trig-on-release
+
+on:
+  release:
+
+permissions:
+  contents: read
+
+jobs:
+  test-on-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Echo current activity name
+        run: |
+          echo "Current activity type: ${{ github.event_name }}"
+
+      - name: Echo github object
+        run: echo ${{ toJson(github) }}
