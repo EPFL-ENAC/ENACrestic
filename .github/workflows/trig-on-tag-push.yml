@@ -1,3 +1,5 @@
+name: Trig on tag push test
+
 on:
   push:
     tags:
