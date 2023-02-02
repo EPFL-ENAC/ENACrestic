@@ -5,6 +5,13 @@
 
 ### Bug Fixes
 
+* **release:** attempt 16 ([a60a40e](https://github.com/EPFL-ENAC/ENACrestic/commit/a60a40e7564f560b6dab1da2094f4f3f0bccf340))
+
+## [0.7.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.0...v0.7.1) (2023-02-02)
+
+
+### Bug Fixes
+
 * **release:** attempt 15 ([cb2936b](https://github.com/EPFL-ENAC/ENACrestic/commit/cb2936b85d33e70b49957f12364260a3e14bc066))
 
 ## [0.7.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.1...v0.7.0) (2023-02-02)
