@@ -1,4 +1,4 @@
-name: release-please
+name: release-please and release to PyPI
 
 on:
   push:
@@ -7,10 +7,29 @@ on:
       - 20-release-to-pypi
 
 jobs:
+
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
-        with:
-          release-type: python
-          package-name: release-please-action
+    - uses: google-github-actions/release-please-action@v3
+      with:
+        release-type: python
+        package-name: release-please-action
+
+  release-to-pypi:
+    runs-on: ubuntu-latest
+    needs: release-please
+    steps:
+    - name: Dump GitHub context
+      id: github_context_step
+      run: echo '${{ toJSON(github) }}'
+    - name: Dump job context
+      run: echo '${{ toJSON(job) }}'
+    - name: Dump steps context
+      run: echo '${{ toJSON(steps) }}'
+    - name: Dump runner context
+      run: echo '${{ toJSON(runner) }}'
+    - name: Dump strategy context
+      run: echo '${{ toJSON(strategy) }}'
+    - name: Dump matrix context
+      run: echo '${{ toJSON(matrix) }}'
