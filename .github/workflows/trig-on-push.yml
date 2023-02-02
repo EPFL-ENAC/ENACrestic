@@ -1,0 +1,13 @@
+name: Trig on push
+
+on:
+  push:
+
+jobs:
+  trig-on-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Echo github object
+      run: |
+        echo "'${{ toJson(github) }}'"
