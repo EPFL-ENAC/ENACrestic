@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.0...v0.7.1) (2023-02-02)
+
+
+### Bug Fixes
+
+* **release:** attempt 14 ([7834cb6](https://github.com/EPFL-ENAC/ENACrestic/commit/7834cb6b698112803925728bbfd7bf509e8d0e4d))
+
 ## [0.7.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.1...v0.7.0) (2023-02-02)
 
 
