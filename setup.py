@@ -31,6 +31,10 @@ author, author_email = map(
     ).groups(),
 )
 
+install_requires = list(
+    filter(lambda dep: dep != "python", pyproject_meta.get("tool.poetry.dependencies"))
+)
+
 setup(
     name=pyproject_meta.get("tool.poetry.name"),
     version=pyproject_meta.get("tool.poetry.version"),
@@ -54,10 +58,7 @@ setup(
     package_dir={"": "src"},
     packages=["enacrestic"],
     python_requires=">=3.6, <4",
-    install_requires=[
-        "PyQt5",
-        "python-pidfile",
-    ],
+    install_requires=install_requires,
     extras_require={
         "dev": [],
         "test": [],
