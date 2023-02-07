@@ -1,5 +1,17 @@
 # ENACrestic
 
+[![License: MIT](https://img.shields.io/badge/license-GPLv3-blue&style=flat)](https://opensource.org/licenses/MIT)
+[![release to PyPI](https://github.com/EPFL-ENAC/ENACrestic/actions/workflows/release-please-pypi.yml/badge.svg)](https://github.com/EPFL-ENAC/ENACrestic/actions/workflows/release-please-pypi.yml/badge.svg)
+[![Python](https://img.shields.io/pypi/pyversions/enacrestic?style=flat&logo=Python)](https://pypi.org/project/enacrestic)
+[![Version](https://img.shields.io/pypi/v/enacrestic?style=flat&logo=PyPI&color=%2334D058)](https://pypi.org/project/enacrestic)
+
+[![Last commit](https://img.shields.io/github/last-commit/EPFL-ENAC/ENACrestic.svg?style=flat&logo=github)](https://github.com/EPFL-ENAC/ENACrestic/commits)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/EPFL-ENAC/ENACrestic?style=flat&logo=github)](https://github.com/EPFL-ENAC/ENACrestic/commits)
+[![Github Stars](https://img.shields.io/github/stars/EPFL-ENAC/ENACrestic?style=flat&logo=github)](https://github.com/EPFL-ENAC/ENACrestic/stargazers)
+[![Github Forks](https://img.shields.io/github/forks/EPFL-ENAC/ENACrestic?style=flat&logo=github)](https://github.com/EPFL-ENAC/ENACrestic/network/members)
+[![Github Watchers](https://img.shields.io/github/watchers/EPFL-ENAC/ENACrestic?style=flat&logo=github)](https://github.com/EPFL-ENAC/ENACrestic)
+[![GitHub contributors](https://img.shields.io/github/contributors/EPFL-ENAC/ENACrestic?style=flat&logo=github)](https://github.com/EPFL-ENAC/ENACrestic/graphs/contributors)
+
 ![ENACrestic](doc_pixmaps/enacrestic.png)
 
 A simple Qt GUI to automate backups with [restic](https://restic.net/)
