@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.0...v0.6.1) (2023-02-09)
+
+
+### Bug Fixes
+
+* **py<3.8:** remove f-string with equal specifier ([de5e9a6](https://github.com/EPFL-ENAC/ENACrestic/commit/de5e9a6f510596cfa2dc66e732f58a149132a9e6)), closes [#97](https://github.com/EPFL-ENAC/ENACrestic/issues/97)
+
 ## [0.6.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.5.1...v0.6.0) (2023-02-07)
 
 
