@@ -227,10 +227,16 @@ average over the last %d : %s""" % (
                     f"Last operation failed, {_str_date(self.app.state.last_failed_utc_dt)}\n"
                     f"see {const.RESTIC_LOGFILE} for details."
                 )
-            if self.app.state.current_status == Status.NO_NETWORK:
+            elif self.app.state.current_status == Status.NO_NETWORK:
                 state_msg += (
                     f"Network timeout {_str_date(self.app.state.last_failed_utc_dt)}"
                 )
+            elif self.app.state.current_status == Status.REPO_NOT_INITIALIZED:
+                state_msg += "Repository not initialized"
+        elif self.app.state.current_operation == CurrentOperation.INIT_IN_PROGRESS:
+            state_msg += "Repo init in progress"
+            if self.app.restic_backup.current_utc_dt_starting is not None:
+                state_msg += f" (started {_str_date(self.app.restic_backup.current_utc_dt_starting)})"
         elif (
             self.app.state.current_operation == CurrentOperation.PRE_BACKUP_IN_PROGRESS
         ):

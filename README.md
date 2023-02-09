@@ -188,12 +188,6 @@ Now close + open a new terminal to get it all into your environment ... or simpl
 . ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
 ```
 
-# Init restic repo by hand
-
-```bash
-restic init --password-file  ~/.enacrestic/.pw
-```
-
 🎉 Setup is now complete! You're now ready to send your 1st backup. 🎉
 
 # Run `enacrestic`

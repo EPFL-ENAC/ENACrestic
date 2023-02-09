@@ -21,6 +21,7 @@ class ResticCompletionStatus(Enum):
     NO_ERROR = ""
     TIMEOUT = "timeout"
     REPO_LOCKED = "repo locked"
+    REPO_NOT_INITIALIZED = "repository not initialized"
 
 
 class ResticBackup:
@@ -57,6 +58,8 @@ class ResticBackup:
         self.app.qt_app.update_system_tray()
         if next_operation is None:
             return
+        elif next_operation == Operation.INIT:
+            self._run_init()
         elif next_operation == Operation.PRE_BACKUP:
             self._run_prebackup()
         elif next_operation == Operation.BACKUP:
@@ -100,6 +103,16 @@ class ResticBackup:
             self.app.logger.error(
                 f"{const.RESTIC_USER_PREFS['ENV']} seems not configured correctly"
             )
+
+    def _run_init(self):
+        self.app.logger.write_new_date_section("Running restic init!")
+        cmd = "restic"
+        args = [
+            "init",
+            "--password-file",
+            const.RESTIC_USER_PREFS["PASSWORDFILE"],
+        ]
+        self._run(cmd, args)
 
     def _run_prebackup(self):
         self.app.logger.write_new_date_section("Running restic pre_backup!")
@@ -183,7 +196,19 @@ class ResticBackup:
         ):
             if re.search(r"timeout", stderr):
                 self.current_process_completion_status = ResticCompletionStatus.TIMEOUT
-            if re.search(
+
+            elif re.search(
+                r"Fatal: unable to open config file:",
+                stderr,
+            ) and re.search(
+                r"Is there a repository at the following location\?",
+                stderr,
+            ):
+                self.current_process_completion_status = (
+                    ResticCompletionStatus.REPO_NOT_INITIALIZED
+                )
+
+            elif re.search(
                 r"the `unlock` command can be used to remove stale locks", stderr
             ):
                 self.current_process_completion_status = (
@@ -228,6 +253,11 @@ class ResticBackup:
                     == ResticCompletionStatus.REPO_LOCKED
                 ):
                     completion_status = Status.REPO_LOCKED
+                elif (
+                    self.current_process_completion_status
+                    == ResticCompletionStatus.REPO_NOT_INITIALIZED
+                ):
+                    completion_status = Status.REPO_NOT_INITIALIZED
                 else:
                     completion_status = Status.LAST_OPERATION_FAILED
         else:
