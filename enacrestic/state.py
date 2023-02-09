@@ -166,7 +166,7 @@ class State:
                 return f"{const.ICONS_FOLDER}/repo_locked.png"
             else:
                 self.app.logger.error(
-                    f"unexpected state: {self.current_operation=} {self.current_status=}"
+                    f"unexpected state: self.current_operation={self.current_operation} self.current_status={self.current_status}"
                 )
                 return (
                     f"{const.ICONS_FOLDER}/just_launched_badge.png"
@@ -183,7 +183,7 @@ class State:
             return f"{const.ICONS_FOLDER}/unlock_in_progress.png"
         else:
             self.app.logger.error(
-                f"unexpected state: {self.current_operation=} {self.current_status=}"
+                f"unexpected state: self.current_operation={self.current_operation} self.current_status={self.current_status}"
             )
             return (
                 f"{const.ICONS_FOLDER}/just_launched_badge.png"
@@ -228,7 +228,7 @@ class State:
                 self.current_operation = CurrentOperation.UNLOCK_IN_PROGRESS
             else:
                 self.app.logger.error(
-                    f"unexpected Operation: {operation.value=} -> skipping"
+                    f"unexpected Operation: operation.value={operation.value} -> skipping"
                 )
                 return self.next_operation()
 
