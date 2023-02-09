@@ -68,21 +68,18 @@ vi ~/.enacrestic/env.sh
 ```
 
 ```snip
-# Local (not recommended!)
-export RESTIC_REPOSITORY=/path/to/my/restic-repo
-
-# SSH / SFTP
-export RESTIC_REPOSITORY=sftp:my-server.epfl.ch:/home/username/path
-
-# S3 Bucket
+# 1. recommended destination: S3 Bucket
 export RESTIC_REPOSITORY=s3:s3.epfl.ch/bucket_name/restic_MyComputerName
 export AWS_ACCESS_KEY_ID=TheBucketRWAccessKey
 export AWS_SECRET_ACCESS_KEY=TheBucketRWSecretKey
+
+# 2. alternative destination: SSH / SFTP
+export RESTIC_REPOSITORY=sftp:my-server.epfl.ch:/home/username/path
 ```
 
-Note, although Restic is able to manage several computers being backed up on a common respository, it's not recommended with ENACrestic. Keep a dedicated `RESTIC_REPOSITORY` per machine.
+Note, although Restic is able to manage several computers being backed up on a same respository, it's not recommended with ENACrestic. Keep a dedicated `RESTIC_REPOSITORY` per machine.
 
-### Write password file
+### Write password file (mandatory)
 
 Add a one line password in it. This is used to encrypt your backups.
 
@@ -90,9 +87,9 @@ Add a one line password in it. This is used to encrypt your backups.
 vi ~/.enacrestic/.pw
 ```
 
-**Be careful !** If you loose this password ... you loose your backups.
+**Be careful ! If you loose this password ... you loose your backups**.
 
-### Write include list file
+### Define what to backup (mandatory)
 
 Add one line per folder / file that has to be backed up.
 
@@ -100,9 +97,11 @@ Add one line per folder / file that has to be backed up.
 vi ~/.enacrestic/bkp_include
 ```
 
-**Example 1** - list every important folder :
-
 ```snip
+# 1. recommended scenario: backup all your home directory
+/home/username/
+
+# 2. alternative scenario: backup only choosen folders
 /home/username/.enacrestic/
 /home/username/Documents/
 /home/username/Teaching/
@@ -116,15 +115,9 @@ vi ~/.enacrestic/bkp_include
 /home/username/Videos/
 ```
 
-**Example 2** - backup all my home directory (and probably exclude some things just after) :
-
-```snip
-/home/username/
-```
-
 note : Lines starting with a `#` are ignored.
 
-### Write exclude list file (optional)
+### Define what to exclude from the backup (optional but recommended)
 
 Add one line per folder / file / expression that has to be excluded.
 
@@ -166,7 +159,7 @@ vi ~/.enacrestic/bkp_exclude
 
 Exact syntax is described [here](https://restic.readthedocs.io/en/latest/040_backup.html#excluding-files)
 
-### Make it available to your shell
+### Make it available to your shell (mandatory)
 
 Add the following 2 lines to have :
 
@@ -178,8 +171,8 @@ vi ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
 ```
 
 ```snip
-export PATH=$PATH:/home/username/.local/bin
-. ~/.enacrestic/env.sh
+export "PATH=$PATH:$HOME/.local/bin"
+. $HOME/.enacrestic/env.sh
 ```
 
 Now close + open a new terminal to get it all into your environment ... or simply reload your rc file :
@@ -187,6 +180,8 @@ Now close + open a new terminal to get it all into your environment ... or simpl
 ```bash
 . ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
 ```
+
+### All done !
 
 🎉 Setup is now complete! You're now ready to send your 1st backup. 🎉
 
