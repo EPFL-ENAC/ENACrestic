@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.1...v0.7.0) (2023-02-09)
+
+
+### Features
+
+* **1st run:** auto-init the repo if needed and no previous backup ([1b56384](https://github.com/EPFL-ENAC/ENACrestic/commit/1b5638403b637aa9dca1dc673c99b853a1531363)), closes [#12](https://github.com/EPFL-ENAC/ENACrestic/issues/12)
+
+
+### Documentation
+
+* **README.md:** reword ([9e57f7e](https://github.com/EPFL-ENAC/ENACrestic/commit/9e57f7e9ee9f05295e8a56d6152d9a6aa7733be8))
+
 ## [0.6.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.0...v0.6.1) (2023-02-09)
 
 
