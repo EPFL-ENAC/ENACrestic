@@ -14,6 +14,7 @@ class Operation(Enum):
     Enumerate all operations that app can run
     """
 
+    INIT = "init"
     PRE_BACKUP = "pre_backup"
     BACKUP = "backup"
     FORGET = "forget"
@@ -26,6 +27,7 @@ class CurrentOperation(Enum):
     """
 
     JUST_LAUNCHED = "just_launched"
+    INIT_IN_PROGRESS = "init_in_progress"
     PRE_BACKUP_IN_PROGRESS = "pre_backup_in_progress"
     BACKUP_IN_PROGRESS = "backup_in_progress"
     FORGET_IN_PROGRESS = "forget_in_progress"
@@ -39,6 +41,7 @@ class Status(Enum):
     """
 
     OK = "ok"
+    REPO_NOT_INITIALIZED = "repo_not_initialized"
     LAST_OPERATION_FAILED = "last_operation_failed"
     NO_NETWORK = "no_network"
     REPO_LOCKED = "repo_locked"
@@ -162,7 +165,10 @@ class State:
                     if self.version_need_upgrade()
                     else f"{const.ICONS_FOLDER}/no_network.png"
                 )
-            elif self.current_status == Status.REPO_LOCKED:
+            elif self.current_status in (
+                Status.REPO_NOT_INITIALIZED,
+                Status.REPO_LOCKED,
+            ):
                 return f"{const.ICONS_FOLDER}/repo_locked.png"
             else:
                 self.app.logger.error(
@@ -173,6 +179,8 @@ class State:
                     if self.version_need_upgrade()
                     else f"{const.ICONS_FOLDER}/just_launched.png"
                 )
+        elif self.current_operation == CurrentOperation.INIT_IN_PROGRESS:
+            return f"{const.ICONS_FOLDER}/repo_locked.png"
         elif self.current_operation == CurrentOperation.PRE_BACKUP_IN_PROGRESS:
             return f"{const.ICONS_FOLDER}/pre_backup_in_progress.png"
         elif self.current_operation == CurrentOperation.BACKUP_IN_PROGRESS:
@@ -217,7 +225,9 @@ class State:
         """
         if len(self.queue) > 0:
             operation = self.queue.pop(0)
-            if operation == Operation.PRE_BACKUP:
+            if operation == Operation.INIT:
+                self.current_operation = CurrentOperation.INIT_IN_PROGRESS
+            elif operation == Operation.PRE_BACKUP:
                 self.current_operation = CurrentOperation.PRE_BACKUP_IN_PROGRESS
                 self.pre_backup_failed = False
             elif operation == Operation.BACKUP:
@@ -266,6 +276,16 @@ class State:
                     self.prev_forget_chronos.pop()
         elif completion_status == Status.REPO_LOCKED:
             self.last_failed_utc_dt = datetime.datetime.utcnow()
+        elif completion_status == Status.REPO_NOT_INITIALIZED:
+            if len(self.prev_backup_chronos) == 0:
+                self.app.logger.write("Repo needs to be initialized")
+                self.queue = [Operation.INIT, Operation.BACKUP]
+            else:
+                self.app.logger.error(
+                    "Repo not initialized but previous backups found -> not going to init the repo."
+                )
+                self.last_failed_utc_dt = datetime.datetime.utcnow()
+                self.queue = []
         else:
             if self.current_operation == CurrentOperation.PRE_BACKUP_IN_PROGRESS:
                 self.pre_backup_failed = True
