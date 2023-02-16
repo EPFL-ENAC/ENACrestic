@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.0...v0.7.1) (2023-02-16)
+
+
+### Documentation
+
+* **README.md:** remove space before ':' ([0773da9](https://github.com/EPFL-ENAC/ENACrestic/commit/0773da95aaea4ed13089b25d30abafbcb24f3fa3))
+* **server:** doc how to run on a server as root ([025853c](https://github.com/EPFL-ENAC/ENACrestic/commit/025853c34af325f3698bbfd1c846bc0b28363ca5)), closes [#45](https://github.com/EPFL-ENAC/ENACrestic/issues/45)
+
 ## [0.7.0](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.6.1...v0.7.0) (2023-02-09)
 
 
