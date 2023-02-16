@@ -18,7 +18,7 @@ A simple Qt GUI to automate backups with [restic](https://restic.net/)
 
 1. Automate your _restic_ backups at a choosen frequency
 2. Run _restic forget_ in a regular basis (and transparently) to keep your backup light and useful
-3. Let you see when :
+3. Let you see when:
 
 - ![pre_backup_in_progress](doc_pixmaps/pre_backup_in_progress.png) `pre_backup` script is running
 - ![backup_in_progress](doc_pixmaps/backup_in_progress.png) `restic backup` is running
@@ -44,7 +44,7 @@ pip3 install --user enacrestic
 
 # Upgrade
 
-To upgrade ENACrestic to latest release, just run the following command :
+To upgrade ENACrestic to latest release, just run the following command:
 
 ```bash
 pip3 install --user --upgrade enacrestic
@@ -115,7 +115,7 @@ vi ~/.enacrestic/bkp_include
 /home/username/Videos/
 ```
 
-note : Lines starting with a `#` are ignored.
+note: Lines starting with a `#` are ignored.
 
 ### Define what to exclude from the backup (optional but recommended)
 
@@ -123,7 +123,7 @@ Add one line per folder / file / expression that has to be excluded.
 
 Before running your first backup, you might want to exclude heavy and unnecessary folders (Like the Downloads or the Trash). You can use the `baobab` utility to find those.
 
-Here is an example of some typical things you might want to exclude from backup :
+Here is an example of some typical things you might want to exclude from backup:
 
 ```bash
 vi ~/.enacrestic/bkp_exclude
@@ -161,7 +161,7 @@ Exact syntax is described [here](https://restic.readthedocs.io/en/latest/040_bac
 
 ### Make it available to your shell (mandatory)
 
-Add the following 2 lines to have :
+Add the following 2 lines to have:
 
 - enacrestic in your `$PATH`
 - enacrestic's env variables available.
@@ -175,7 +175,7 @@ export "PATH=$PATH:$HOME/.local/bin"
 . $HOME/.enacrestic/env.sh
 ```
 
-Now close + open a new terminal to get it all into your environment ... or simply reload your rc file :
+Now close + open a new terminal to get it all into your environment ... or simply reload your rc file:
 
 ```bash
 . ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
@@ -202,7 +202,7 @@ From now on, ENACrestic is running in the background and doing the backups on a 
 
 You can check it's activity by reading the `~/.enacrestic/last_backups.log` file.
 
-Note : **First backup can take a long time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
+Note: **First backup can take a long time!** Please consider having enough time for the 1st backup to complete. It'll be the longest backup ever, since everything has to be copied. All future backups will then be only incremental.
 
 # Run **ENACrestic** on a server
 
@@ -260,7 +260,7 @@ By default, every 10 backups, a `restic forget` will clean repository from backu
 
 # What ENACrestic doesn't do
 
-ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use _restic_ itself. Here are basic commands :
+ENACrestic is here to help you, running backups on a regular basis. If you want to browse backups, restore files/folders, you'll have to use _restic_ itself. Here are basic commands:
 
 ### List the snapshots (backups)
 
