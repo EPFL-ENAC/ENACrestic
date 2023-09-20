@@ -208,9 +208,7 @@ class ResticBackup:
                     ResticCompletionStatus.REPO_NOT_INITIALIZED
                 )
 
-            elif re.search(
-                r"the `unlock` command can be used to remove stale locks", stderr
-            ):
+            elif re.search(r"unable to create lock in backend", stderr):
                 self.current_process_completion_status = (
                     ResticCompletionStatus.REPO_LOCKED
                 )
