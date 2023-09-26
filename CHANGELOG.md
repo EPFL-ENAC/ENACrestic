@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.1...v0.7.2) (2023-09-26)
+
+
+### Bug Fixes
+
+* **stale locks:** fix stale locks detection ([4ebfa87](https://github.com/EPFL-ENAC/ENACrestic/commit/4ebfa87d7dcd958b34e4528e50dace51bf63b598)), closes [#107](https://github.com/EPFL-ENAC/ENACrestic/issues/107)
+
 ## [0.7.1](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.0...v0.7.1) (2023-02-16)
 
 
