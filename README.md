@@ -119,7 +119,7 @@ vi ~/.enacrestic/bkp_include
 
 note: Lines starting with a `#` are ignored.
 
-### Define what to exclude from the backup (optional but recommended)
+### Define what to exclude from the backup (recommended)
 
 Add one line per folder / file / expression that has to be excluded.
 
