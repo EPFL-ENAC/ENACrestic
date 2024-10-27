@@ -37,13 +37,10 @@ This has been tested and validated on
 - _Ubuntu 24.04 LTS_
 
 ```bash
-sudo apt install restic python3-pip python3-venv qt5dxcb-plugin python3-pyqt5
-mkdir ~/.enacrestic
-python3 -m venv ~/.enacrestic/venv
-. ~/.enacrestic/venv/bin/activate
+sudo apt install restic pipx qt5dxcb-plugin python3-pyqt5
+pipx install enacrestic
 
-pip3 install --upgrade pip
-pip3 install enacrestic
+mkdir ~/.enacrestic
 ```
 
 # Upgrade
@@ -51,8 +48,7 @@ pip3 install enacrestic
 To upgrade ENACrestic to latest release, just run the following command:
 
 ```bash
-. ~/.enacrestic/venv/bin/activate
-pip3 install --upgrade enacrestic
+pipx upgrade enacrestic
 ```
 
 # Config ENACrestic
@@ -164,20 +160,13 @@ Exact syntax is described [here](https://restic.readthedocs.io/en/latest/040_bac
 
 ```bash
 mkdir -p ~/.local/share/applications ~/.local/share/icons
-ln -s ~/.enacrestic/venv/share/applications/enacrestic.desktop ~/.local/share/applications/
-ln -s ~/.enacrestic/venv/share/icons/enacrestic.png ~/.local/share/icons/
+ln -s ~/.local/share/pipx/venvs/enacrestic/share/applications/enacrestic.desktop ~/.local/share/applications/
+ln -s ~/.local/share/pipx/venvs/enacrestic/share/icons/enacrestic.png ~/.local/share/icons/
 ```
 
 ### Make it available to your shell (mandatory)
 
-Add the following 2 lines to have:
-
-- enacrestic in your `$PATH`
-- enacrestic's env variables available.
-
 ```bash
-mkdir -p ~/.local/bin
-ln -s ~/.enacrestic/venv/bin/enacrestic ~/.local/bin/
 vi ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
 ```
 
