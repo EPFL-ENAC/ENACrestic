@@ -167,7 +167,8 @@ ln -s ~/.local/share/pipx/venvs/enacrestic/share/icons/enacrestic.png ~/.local/s
 ### Make it available to your shell (mandatory)
 
 ```bash
-vi ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
+vi ~/.bashrc # when using BASH
+vi ~/.zshrc # when using ZSH
 ```
 
 ```snip
@@ -178,7 +179,8 @@ export "PATH=$PATH:$HOME/.local/bin"
 Now close + open a new terminal to get it all into your environment ... or simply reload your rc file:
 
 ```bash
-. ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
+. ~/.bashrc # when using BASH
+. ~/.zshrc # when using ZSH
 ```
 
 ### All done !
