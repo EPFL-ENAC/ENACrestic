@@ -32,7 +32,6 @@ A simple Qt GUI to automate backups with [restic](https://restic.net/)
 
 This has been tested and validated on
 
-- _Ubuntu 18.04 LTS_
 - _Ubuntu 20.04 LTS_
 - _Ubuntu 22.04 LTS_
 - _Ubuntu 24.04 LTS_
