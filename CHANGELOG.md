@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.3](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.2...v0.7.3) (2024-10-28)
+
+
+### Documentation
+
+* Add Ubuntu 24.04 support ([411885b](https://github.com/EPFL-ENAC/ENACrestic/commit/411885b46fadf7cf585ddacef06f59d7ee5c8a39))
+* Reword bash vs zsh ([6ca0987](https://github.com/EPFL-ENAC/ENACrestic/commit/6ca0987d63d37addcad89eef6480e8b4dfa3a5e5))
+* Tiny reword README ([d75eba7](https://github.com/EPFL-ENAC/ENACrestic/commit/d75eba722515f1435c12042802765ccc8b8bff6e))
+* Use pipx to install ENACrestic ([0d912ac](https://github.com/EPFL-ENAC/ENACrestic/commit/0d912ac911dbd6d8f4a94b5586fd1dc3f884c8fe))
+
 ## [0.7.2](https://github.com/EPFL-ENAC/ENACrestic/compare/v0.7.1...v0.7.2) (2023-09-26)
 
 
