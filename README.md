@@ -32,14 +32,15 @@ A simple Qt GUI to automate backups with [restic](https://restic.net/)
 
 This has been tested and validated on
 
-- _Ubuntu 18.04 LTS_
 - _Ubuntu 20.04 LTS_
 - _Ubuntu 22.04 LTS_
+- _Ubuntu 24.04 LTS_
 
 ```bash
-sudo apt install restic python3-pip qt5dxcb-plugin python3-pyqt5
-pip3 install --user --upgrade pip
-pip3 install --user enacrestic
+sudo apt install restic pipx qt5dxcb-plugin python3-pyqt5
+pipx install enacrestic
+
+mkdir ~/.enacrestic
 ```
 
 # Upgrade
@@ -47,17 +48,13 @@ pip3 install --user enacrestic
 To upgrade ENACrestic to latest release, just run the following command:
 
 ```bash
-pip3 install --user --upgrade enacrestic
+pipx upgrade enacrestic
 ```
 
 # Config ENACrestic
 
 Note: For this documentation, we have chosen to use the `vi` text editor.
 Adapt the commands below by replacing it with the editor of your choice. (`nano`, `gedit`, ...)
-
-```bash
-mkdir ~/.enacrestic
-```
 
 ### Write environment setup file
 
@@ -117,7 +114,7 @@ vi ~/.enacrestic/bkp_include
 
 note: Lines starting with a `#` are ignored.
 
-### Define what to exclude from the backup (optional but recommended)
+### Define what to exclude from the backup (recommended)
 
 Add one line per folder / file / expression that has to be excluded.
 
@@ -159,15 +156,19 @@ vi ~/.enacrestic/bkp_exclude
 
 Exact syntax is described [here](https://restic.readthedocs.io/en/latest/040_backup.html#excluding-files)
 
-### Make it available to your shell (mandatory)
-
-Add the following 2 lines to have:
-
-- enacrestic in your `$PATH`
-- enacrestic's env variables available.
+### Make it available to your OS as an App (recommended)
 
 ```bash
-vi ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
+mkdir -p ~/.local/share/applications ~/.local/share/icons
+ln -s ~/.local/share/pipx/venvs/enacrestic/share/applications/enacrestic.desktop ~/.local/share/applications/
+ln -s ~/.local/share/pipx/venvs/enacrestic/share/icons/enacrestic.png ~/.local/share/icons/
+```
+
+### Make it available to your shell (mandatory)
+
+```bash
+vi ~/.bashrc # when using BASH
+vi ~/.zshrc # when using ZSH
 ```
 
 ```snip
@@ -178,7 +179,8 @@ export "PATH=$PATH:$HOME/.local/bin"
 Now close + open a new terminal to get it all into your environment ... or simply reload your rc file:
 
 ```bash
-. ~/.bashrc # or ~/.zshrc or whatever is your shell rc file
+. ~/.bashrc # when using BASH
+. ~/.zshrc # when using ZSH
 ```
 
 ### All done !
